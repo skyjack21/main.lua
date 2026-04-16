@@ -1,77 +1,79 @@
--- [[ OMNI v145: MOUNT INDEPENDENCE - ULTIMATE BOOT FIX ]] --
+-- [[ OMNI v146: MOUNT INDEPENDENCE - SCHEDULER STABILITY ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
 
--- Menunggu PlayerGui dengan proteksi maksimal
-local pgui = lp:FindFirstChild("PlayerGui") or lp:WaitForChild("PlayerGui", 20) [cite: 12]
+-- Memastikan PlayerGui benar-benar tersedia sebelum lanjut [cite: 1, 12]
+local pgui = lp:FindFirstChild("PlayerGui") or lp:WaitForChild("PlayerGui", 20)
 
--- LINK DATABASE
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt" [cite: 12]
+-- URL DATABASE KEY [cite: 12]
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
+
+-- Deklarasi Global agar tidak Nil saat dipanggil fungsi lain
+local Screen, KeyPanel, Main, Status, KeyInput
 
 -- [[ 1. UI CONSTRUCTOR ]] --
-local function BuildUI()
-    -- Hapus jejak versi lama
+local function InitializeUI()
+    -- Hapus versi lama jika ada [cite: 1, 12]
     for _, old in ipairs(pgui:GetChildren()) do
         if old.Name:find("OMNI_SECURE") then old:Destroy() end
     end
     
-    local Screen = Instance.new("ScreenGui")
-    Screen.Name = "OMNI_SECURE_V145"
+    Screen = Instance.new("ScreenGui")
+    Screen.Name = "OMNI_SECURE_V146"
     Screen.Parent = pgui
     Screen.ResetOnSpawn = false
     Screen.DisplayOrder = 999
     
-    -- PANEL LOGIN (HARUS ADA DULU)
-    local KeyPanel = Instance.new("Frame", Screen)
-    KeyPanel.Name = "LoginFrame"
-    KeyPanel.Size = UDim2.new(0, 320, 0, 240) [cite: 13]
-    KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0) [cite: 13]
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20) [cite: 13]
-    KeyPanel.Active, KeyPanel.Draggable = true, true [cite: 13]
+    -- PANEL LOGIN [cite: 13]
+    KeyPanel = Instance.new("Frame", Screen)
+    KeyPanel.Size = UDim2.new(0, 320, 0, 240)
+    KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    KeyPanel.Active, KeyPanel.Draggable = true, true
     Instance.new("UICorner", KeyPanel)
 
     local KTitle = Instance.new("TextLabel", KeyPanel)
     KTitle.Size = UDim2.new(1, 0, 0, 45)
     KTitle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    KTitle.Text = "LOGIN SYSTEM v145"
+    KTitle.Text = "LOGIN SYSTEM v146"
     KTitle.TextColor3 = Color3.new(1, 1, 1)
     KTitle.Font = Enum.Font.GothamBold
     Instance.new("UICorner", KTitle)
 
-    local KeyInput = Instance.new("TextBox", KeyPanel)
-    KeyInput.Size = UDim2.new(0.85, 0, 0, 45) [cite: 14]
-    KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0) [cite: 14]
+    KeyInput = Instance.new("TextBox", KeyPanel)
+    KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
+    KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
     KeyInput.PlaceholderText = "Enter Key Here..."
-    KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35) [cite: 14]
+    KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     KeyInput.TextColor3 = Color3.new(1, 1, 1)
+    KeyInput.Text = "" -- Memastikan tidak nil [cite: 14]
     Instance.new("UICorner", KeyInput)
 
     local CheckBtn = Instance.new("TextButton", KeyPanel)
-    CheckBtn.Size = UDim2.new(0.85, 0, 0, 45) [cite: 15]
-    CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0) [cite: 15]
-    CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50) [cite: 15]
+    CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
+    CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
+    CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
     CheckBtn.Text = "CHECK KEY"
-    CheckBtn.TextColor3 = Color3.new(1, 1, 1) [cite: 15]
+    CheckBtn.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", CheckBtn)
 
-    local Status = Instance.new("TextLabel", KeyPanel)
+    Status = Instance.new("TextLabel", KeyPanel)
     Status.Size = UDim2.new(1, 0, 0, 30)
     Status.Position = UDim2.new(0, 0, 0.85, 0)
     Status.BackgroundTransparency = 1
-    Status.Text = "Ready to Boot."
+    Status.Text = "Awaiting Key..."
     Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 
-    -- PANEL CHEAT (HIDDEN)
-    local Main = Instance.new("Frame", Screen)
-    Main.Name = "MainFrame"
-    Main.Size = UDim2.new(0, 240, 0, 520) [cite: 16]
-    Main.Position = UDim2.new(0.1, 0, 0.2, 0) [cite: 16]
-    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20) [cite: 16]
-    Main.Visible = false [cite: 16]
-    Main.Active, Main.Draggable = true, true [cite: 16]
+    -- PANEL CHEAT (HIDDEN) [cite: 16]
+    Main = Instance.new("Frame", Screen)
+    Main.Size = UDim2.new(0, 240, 0, 520)
+    Main.Position = UDim2.new(0.1, 0, 0.2, 0)
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    Main.Visible = false
+    Main.Active, Main.Draggable = true, true
     Instance.new("UICorner", Main)
     Instance.new("UIStroke", Main).Color = Color3.fromRGB(200, 0, 0)
 
@@ -83,88 +85,83 @@ local function BuildUI()
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
 
-    return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
-end
-
--- Eksekusi BuildUI dengan aman
-local success_ui, Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = pcall(BuildUI) [cite: 17]
-if not success_ui then warn("UI gagal dimuat!") return end
-
--- [[ 2. FUNCTIONS ]] --
-local function SelfDestruct()
-    Screen:Destroy()
-end
-
--- [[ 3. VERIFIKASI ]] --
-CheckBtn.MouseButton1Click:Connect(function()
-    local input = KeyInput.Text
-    Status.Text = "Verifying..."
-    
-    local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end) [cite: 18]
-    if success then
-        local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(result) end) [cite: 18]
-        if decodeSuccess and data.KEY_LIST[input] then
-            Status.Text = "SUCCESS!" [cite: 19]
-            task.wait(0.5)
-            KeyPanel.Visible = false
-            Main.Visible = true [cite: 19]
+    -- Logika Cek Key [cite: 18]
+    CheckBtn.MouseButton1Click:Connect(function()
+        local input = KeyInput.Text
+        Status.Text = "Verifying..."
+        
+        local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
+        if success then
+            local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(result) end)
+            if decodeSuccess and data.KEY_LIST[input] then
+                KeyPanel.Visible = false
+                Main.Visible = true
+                Status.Text = "SUCCESS!"
+            else
+                Status.Text = "INVALID KEY!"
+            end
         else
-            Status.Text = "KEY INVALID!" [cite: 20]
+            Status.Text = "SERVER ERROR!"
         end
-    else
-        Status.Text = "SERVER ERROR!" [cite: 21]
-    end
-end)
+    end)
+    
+    return Main
+end
 
--- [[ 4. CORE ENGINE ]] --
+-- Menjalankan Inisialisasi
+local MainFrame = InitializeUI()
+
+-- [[ 2. ENGINE & CONTROLS ]] --
 local Toggles = {Speed = false, SafeClamp = false}
 local Keys = {"Speed", "SafeClamp"}
 local Names = {"SPEED ENGINE", "SAFE CLAMP"}
 local Buttons = {}
 local Index, SpeedMult = 1, 2.5
 
+-- Penggerak Utama [cite: 6, 22]
 rs.RenderStepped:Connect(function()
-    if not Main.Visible then return end
+    if not MainFrame or not MainFrame.Visible then return end
     local char = lp.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChild("Humanoid") [cite: 22]
+    local hum = char and char:FindFirstChild("Humanoid")
     
     if root and hum and hum.MoveDirection.Magnitude > 0 then
-        if Toggles.Speed then root.CFrame = root.CFrame + (hum.MoveDirection * SpeedMult) end [cite: 22]
+        if Toggles.Speed then root.CFrame = root.CFrame + (hum.MoveDirection * SpeedMult) end
         if Toggles.SafeClamp then
             local ray = workspace:Raycast(root.Position, hum.MoveDirection * 5)
-            if ray then root.Velocity = Vector3.new(0, root.Velocity.Y, 0) end [cite: 22]
+            if ray then root.Velocity = Vector3.new(0, root.Velocity.Y, 0) end -- [cite: 7]
         end
     end
 end)
 
--- [[ 5. CONTROLS ]] --
-local function Refresh() [cite: 23]
+local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
-        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]") [cite: 23]
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30) [cite: 23]
+        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]") -- [cite: 9, 23]
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30)
     end
 end
 
+-- Generate Tombol [cite: 10, 24]
 for i = 1, #Names do
-    local b = Instance.new("TextButton", Main)
+    local b = Instance.new("TextButton", MainFrame)
     b.Size = UDim2.new(1, -20, 0, 65)
     b.Position = UDim2.new(0, 10, 0, (i * 75) - 25)
-    b.Font = Enum.Font.GothamBold [cite: 24]
-    b.TextColor3 = Color3.new(1, 1, 1) [cite: 24]
+    b.Font = Enum.Font.GothamBold
+    b.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", b)
     table.insert(Buttons, b)
 end
 
+-- Input Handler [cite: 11, 25]
 uis.InputBegan:Connect(function(k, g)
-    if k.KeyCode == Enum.KeyCode.F8 then SelfDestruct() end
-    if k.KeyCode == Enum.KeyCode.L and not KeyPanel.Visible then Main.Visible = not Main.Visible end
+    if k.KeyCode == Enum.KeyCode.F8 then Screen:Destroy() end
+    if k.KeyCode == Enum.KeyCode.L and not KeyPanel.Visible then MainFrame.Visible = not MainFrame.Visible end
     
-    if g or not Main.Visible then return end
+    if g or not MainFrame.Visible then return end
     if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names Refresh()
     elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1 Refresh()
-    elseif k.KeyCode == Enum.KeyCode.Return then Toggles[Keys[Index]] = not Toggles[Keys[Index]] Refresh() end [cite: 25]
+    elseif k.KeyCode == Enum.KeyCode.Return then Toggles[Keys[Index]] = not Toggles[Keys[Index]] Refresh() end
 end)
 
 Refresh()
