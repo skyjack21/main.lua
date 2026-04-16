@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v500: PHANTOM-CORE - TOTAL RESET & STABILITY ]] --
+-- [[ SKYJACK RBX v600: TITAN-LEGACY - CLEAN & STABLE REBUILD ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -7,7 +7,7 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Master Control
+-- Configuration Reset
 local Running = true
 local Screen, Main, KeyPanel
 local Toggles = {Speed = false, WallPass = false, InfJump = false, Vip = false, HideName = false, Shield = false}
@@ -16,7 +16,7 @@ local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP PASS INJECT
 local Buttons = {}
 local Index = 1
 
--- [[ 1. GHOST IDENTITY (HIDE NAME) ]] --
+-- [[ 1. GHOST IDENTITY (STRICT HIDE NAME) ]] --
 local function StealthLogic(char)
     if not char then return end
     task.spawn(function()
@@ -28,6 +28,7 @@ local function StealthLogic(char)
                         hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                         hum.DisplayName = " "
                     end
+                    -- Bersihkan tag nama/overhead yang dipasang script game
                     for _, v in pairs(char:GetDescendants()) do
                         if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") then
                             v:Destroy()
@@ -35,36 +36,36 @@ local function StealthLogic(char)
                     end
                 end)
             end
-            task.wait(0.3)
+            task.wait(0.5)
         end
     end)
 end
 lp.CharacterAdded:Connect(StealthLogic)
 
--- [[ 2. PHYSICS ENGINE: VELOCITY LOCKING ]] --
-rs.Stepped:Connect(function()
+-- [[ 2. PHYSICS ENGINE: LOOK-VECTOR STABILITY ]] --
+rs.RenderStepped:Connect(function()
     if not Running or not lp.Character then return end
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
     local root = lp.Character:FindFirstChild("HumanoidRootPart")
     
     if not hum or not root then return end
 
-    -- SPEED & MOUNT STABILITY
+    -- SPEED & MOUNT SYSTEM (Fixed for Stairs)
     if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
-        local target = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
-        -- Dorongan Linear (X, Z) tanpa mengganggu gaya gravitasi (Y)
-        local vel = hum.MoveDirection * 90 
-        target.Velocity = Vector3.new(vel.X, target.Velocity.Y, vel.Z)
+        local activeObj = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
+        -- Dorongan fisik murni pada sumbu horisontal
+        local direction = hum.MoveDirection
+        activeObj.Velocity = Vector3.new(direction.X * 95, activeObj.Velocity.Y, direction.Z * 95)
     end
 
     -- NOCLIP (WALL PASS)
     if Toggles.WallPass then
-        for _, v in pairs(lp.Character:GetDescendants()) do
+        for _, v in pairs(lp.Character:GetChildren()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
     else
-        -- Force-Reset Collision (PENTING AGAR TIDAK TEMBUS LANTAI)
-        for _, v in pairs(lp.Character:GetDescendants()) do
+        -- Force-Reset agar tidak nembus lantai saat dimatikan
+        for _, v in pairs(lp.Character:GetChildren()) do
             if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then 
                 v.CanCollide = true 
             end
@@ -72,7 +73,7 @@ rs.Stepped:Connect(function()
     end
 end)
 
--- [[ 3. JUMPING & CORE INJECTIONS ]] --
+-- [[ 3. INFINITE JUMP & INJECTIONS ]] --
 uis.JumpRequest:Connect(function()
     if Running and Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
@@ -81,7 +82,7 @@ uis.JumpRequest:Connect(function()
 end)
 
 local function StartInjections()
-    -- ANTI-BAN SHIELD (KICK BYPASS)
+    -- ANTI-BAN (KICK PROTECTOR)
     local mt = getrawmetatable(game)
     local old = mt.__namecall
     setreadonly(mt, false)
@@ -91,15 +92,14 @@ local function StartInjections()
     end)
     setreadonly(mt, true)
     
-    -- VIP INJECTOR
+    -- VIP AUTO-TOUCH
     task.spawn(function()
-        while Running and task.wait(0.8) do
+        while Running and task.wait(1) do
             if Toggles.Vip and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                local r = lp.Character.HumanoidRootPart
                 for _, v in pairs(workspace:GetDescendants()) do
                     if v:IsA("TouchTransmitter") and (v.Parent.Name:lower():find("vip") or v.Parent.Name:lower():find("pass")) then
-                        firetouchinterest(r, v.Parent, 0)
-                        firetouchinterest(r, v.Parent, 1)
+                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 0)
+                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 1)
                     end
                 end
             end
@@ -107,11 +107,11 @@ local function StartInjections()
     end)
 end
 
--- [[ 4. UI BUILD: PHANTOM DESIGN ]] --
+-- [[ 4. UI: TITAN COMPACT DESIGN ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "PHANTOM_V500" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "TITAN_V600" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "PHANTOM_V500"
+    Screen.Name = "TITAN_V600"
     Screen.IgnoreGuiInset = true
 
     -- LOGIN PANEL
@@ -125,7 +125,7 @@ local function BuildUI()
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
     KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "LICENSE KEY"
+    KeyInput.PlaceholderText = "PRODUCT KEY"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
     KeyInput.TextColor3 = Color3.new(1,1,1)
@@ -140,9 +140,9 @@ local function BuildUI()
     LoginBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 5)
 
-    -- MAIN HUB
+    -- HUB
     Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 165, 0, 340)
+    Main.Size = UDim2.new(0, 160, 0, 340)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     Main.BackgroundTransparency = 0.1
@@ -164,7 +164,7 @@ end
 
 BuildUI()
 
--- [[ 5. CONTROLS & NAVIGATION ]] --
+-- [[ 5. CONTROLS ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
