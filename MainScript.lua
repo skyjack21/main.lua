@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v600: TITAN-LEGACY - CLEAN & STABLE REBUILD ]] --
+-- [[ SKYJACK RBX v700: ZERO-DRIFT - SPECIALIZED FOR TOP TIME & MOUNTS ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -7,7 +7,7 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Configuration Reset
+-- Reset States
 local Running = true
 local Screen, Main, KeyPanel
 local Toggles = {Speed = false, WallPass = false, InfJump = false, Vip = false, HideName = false, Shield = false}
@@ -15,8 +15,9 @@ local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield"}
 local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP PASS INJECT", "GHOST IDENTITY", "ANTI-BAN SHIELD"}
 local Buttons = {}
 local Index = 1
+local TargetSpeed = 105 -- Dioptimalkan untuk Top Time tanpa memicu auto-kick
 
--- [[ 1. GHOST IDENTITY (STRICT HIDE NAME) ]] --
+-- [[ 1. GHOST IDENTITY (ANTI-STAFF DETECTION) ]] --
 local function StealthLogic(char)
     if not char then return end
     task.spawn(function()
@@ -28,7 +29,6 @@ local function StealthLogic(char)
                         hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                         hum.DisplayName = " "
                     end
-                    -- Bersihkan tag nama/overhead yang dipasang script game
                     for _, v in pairs(char:GetDescendants()) do
                         if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") then
                             v:Destroy()
@@ -36,44 +36,47 @@ local function StealthLogic(char)
                     end
                 end)
             end
-            task.wait(0.5)
+            task.wait(0.4)
         end
     end)
 end
 lp.CharacterAdded:Connect(StealthLogic)
 
--- [[ 2. PHYSICS ENGINE: LOOK-VECTOR STABILITY ]] --
-rs.RenderStepped:Connect(function()
+-- [[ 2. MOUNT-STABLE PHYSICS ENGINE ]] --
+rs.Stepped:Connect(function()
     if not Running or not lp.Character then return end
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
     local root = lp.Character:FindFirstChild("HumanoidRootPart")
     
     if not hum or not root then return end
 
-    -- SPEED & MOUNT SYSTEM (Fixed for Stairs)
     if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
-        local activeObj = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
-        -- Dorongan fisik murni pada sumbu horisontal
-        local direction = hum.MoveDirection
-        activeObj.Velocity = Vector3.new(direction.X * 95, activeObj.Velocity.Y, direction.Z * 95)
+        -- Mencari apakah kita sedang berada di atas Mount
+        local activeModel = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
+        
+        -- FIX MUNDUR: Mengunci arah hanya ke depan berdasarkan MoveDirection Humanoid
+        -- Sumbu Y dikunci sesuai gravitasi agar tidak melompat liar
+        local moveDir = hum.MoveDirection
+        activeModel.Velocity = Vector3.new(moveDir.X * TargetSpeed, activeModel.Velocity.Y, moveDir.Z * TargetSpeed)
+    elseif Toggles.Speed and hum.MoveDirection.Magnitude == 0 then
+        -- FIX MUNDUR: Jika tidak dipencet apa-apa, paksa Velocity jadi 0 agar tidak meluncur sendiri
+        local activeModel = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
+        activeModel.Velocity = Vector3.new(0, activeModel.Velocity.Y, 0)
     end
 
     -- NOCLIP (WALL PASS)
     if Toggles.WallPass then
-        for _, v in pairs(lp.Character:GetChildren()) do
+        for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
     else
-        -- Force-Reset agar tidak nembus lantai saat dimatikan
-        for _, v in pairs(lp.Character:GetChildren()) do
-            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then 
-                v.CanCollide = true 
-            end
+        for _, v in pairs(lp.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
         end
     end
 end)
 
--- [[ 3. INFINITE JUMP & INJECTIONS ]] --
+-- [[ 3. CORE FEATURES ]] --
 uis.JumpRequest:Connect(function()
     if Running and Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
@@ -82,7 +85,6 @@ uis.JumpRequest:Connect(function()
 end)
 
 local function StartInjections()
-    -- ANTI-BAN (KICK PROTECTOR)
     local mt = getrawmetatable(game)
     local old = mt.__namecall
     setreadonly(mt, false)
@@ -91,41 +93,26 @@ local function StartInjections()
         return old(self, ...)
     end)
     setreadonly(mt, true)
-    
-    -- VIP AUTO-TOUCH
-    task.spawn(function()
-        while Running and task.wait(1) do
-            if Toggles.Vip and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("TouchTransmitter") and (v.Parent.Name:lower():find("vip") or v.Parent.Name:lower():find("pass")) then
-                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 0)
-                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 1)
-                    end
-                end
-            end
-        end
-    end)
 end
 
--- [[ 4. UI: TITAN COMPACT DESIGN ]] --
+-- [[ 4. UI: COMPACT PHANTOM HUB ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "TITAN_V600" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "ZERO_DRIFT_V700" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "TITAN_V600"
+    Screen.Name = "ZERO_DRIFT_V700"
     Screen.IgnoreGuiInset = true
 
-    -- LOGIN PANEL
     KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 240, 0, 150)
     KeyPanel.Position = UDim2.new(0.5, -120, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 160, 255)
+    Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 170, 255)
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
     KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "PRODUCT KEY"
+    KeyInput.PlaceholderText = "LICENSE KEY"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
     KeyInput.TextColor3 = Color3.new(1,1,1)
@@ -135,21 +122,20 @@ local function BuildUI()
     LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
     LoginBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
     LoginBtn.Text = "AUTHENTICATE"
-    LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+    LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
     LoginBtn.TextColor3 = Color3.new(1,1,1)
     LoginBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 5)
 
-    -- HUB
     Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 160, 0, 340)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     Main.BackgroundTransparency = 0.1
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-    Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 160, 255)
+    Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 170, 255)
 
     LoginBtn.MouseButton1Click:Connect(function()
         local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
@@ -164,12 +150,11 @@ end
 
 BuildUI()
 
--- [[ 5. CONTROLS ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
         b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 160, 255) or Color3.fromRGB(25, 25, 30)
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(20, 20, 20)
         b.BackgroundTransparency = (i == Index) and 0 or 0.6
     end
 end
