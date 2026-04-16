@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v290: PHANTOM - THE STEALTH ULTIMATUM ]] --
+-- [[ SKYJACK RBX v300: GHOST - ABSOLUTE STEALTH & JUMP FIX ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -15,30 +15,52 @@ local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield"}
 local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP INJECTION", "HIDE IDENTITY", "ANTI-BAN SHIELD"}
 local Buttons = {}
 local Index = 1
-local SpeedVal = 2.3 -- Optimized Top Time Speed
 
--- [[ 1. THE STEALTH ENGINE (HIDE NAME FIX) ]] --
-local function SecureIdentity()
-    rs.RenderStepped:Connect(function()
+-- [[ 1. THE GHOST ENGINE: TOTAL HIDE NAME ]] --
+local function GhostIdentity()
+    rs.Heartbeat:Connect(function()
         if Running and Toggles.HideName and lp.Character then
             pcall(function()
+                local head = lp.Character:FindFirstChild("Head")
                 local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-                    hum.DisplayName = "" -- Menghapus nama di papan nama
+                
+                -- Sembunyikan Nama Bawaan Roblox
+                if hum then 
+                    hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None 
+                    hum.DisplayName = " "
                 end
-                -- Menghapus semua BillboardGui di kepala (Tag Nama Game)
-                for _, v in pairs(lp.Character:GetDescendants()) do
-                    if v:IsA("BillboardGui") then v.Enabled = false end
+                
+                -- HANCURKAN CUSTOM OVERHEAD (Penyebab nama masih muncul di gambar)
+                if head then
+                    for _, v in pairs(head:GetChildren()) do
+                        if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") or v.Name:lower():find("gui") then
+                            v:Destroy() -- Hapus permanen dari kepala
+                        end
+                    end
                 end
+                
+                -- Sembunyikan dari Player List & Rank (Optional/Client Side)
+                lp.DisplayName = " "
             end)
         end
     end)
 end
 
--- [[ 2. PHYSICS & CORE ]] --
+-- [[ 2. INFINITE JUMP: RE-ENGINEERED ]] --
+uis.JumpRequest:Connect(function()
+    if Running and Toggles.InfJump and lp.Character then
+        local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            -- Memaksa State Jumping tanpa peduli animasi atau cooldown game
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            task.wait()
+            hum:ChangeState(Enum.HumanoidStateType.Falling)
+        end
+    end
+end)
+
+-- [[ 3. MOTION & CORE ]] --
 local function StartCore()
-    -- Anti-Ban (Staff Deflector)
     local mt = getrawmetatable(game)
     local old = mt.__namecall
     setreadonly(mt, false)
@@ -48,9 +70,8 @@ local function StartCore()
     end)
     setreadonly(mt, true)
 
-    SecureIdentity() -- Jalankan fungsi hide name
+    GhostIdentity()
 
-    -- VIP Injector Loop
     task.spawn(function()
         while Running and task.wait(0.5) do
             if Toggles.Vip and lp.Character:FindFirstChild("HumanoidRootPart") then
@@ -71,7 +92,7 @@ rs.Heartbeat:Connect(function()
     local hum = lp.Character:FindFirstChild("Humanoid")
     if Toggles.Speed and root and hum and hum.MoveDirection.Magnitude > 0 then
         local target = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
-        target.CFrame = target.CFrame + (hum.MoveDirection * SpeedVal)
+        target.CFrame = target.CFrame + (hum.MoveDirection * 2.3)
     end
     if Toggles.WallPass then
         for _, v in pairs(lp.Character:GetDescendants()) do
@@ -80,30 +101,32 @@ rs.Heartbeat:Connect(function()
     end
 end)
 
--- [[ 3. DESIGN: PHANTOM MINIMALIST (TINY & CLEAN) ]] --
+-- [[ 4. LUXURY COMPACT UI DESIGN ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "PHANTOM_HUB" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "GHOST_V300" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "PHANTOM_HUB"
+    Screen.Name = "GHOST_V300"
+    Screen.IgnoreGuiInset = true
 
-    -- TINY LOGIN PANEL (260px Width)
+    -- LOGIN PANEL (Minimalist Neon)
     KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 260, 0, 180)
     KeyPanel.Position = UDim2.new(0.5, -130, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 10)
     Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 170, 255)
 
     local LHead = Instance.new("TextLabel", KeyPanel)
-    LHead.Size = UDim2.new(1, 0, 0, 35)
-    LHead.Text = "PHANTOM ACCESS"
+    LHead.Size = UDim2.new(1, 0, 0, 40)
+    LHead.Text = "GHOST AUTHENTICATION"
     LHead.TextColor3 = Color3.fromRGB(0, 170, 255)
     LHead.BackgroundTransparency = 1
     LHead.Font = Enum.Font.GothamBold
+    LHead.TextSize = 12
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
-    KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
     KeyInput.PlaceholderText = "PRODUCT KEY"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
@@ -112,7 +135,7 @@ local function BuildUI()
 
     local Line = Instance.new("Frame", KeyPanel)
     Line.Size = UDim2.new(0.8, 0, 0, 1)
-    Line.Position = UDim2.new(0.1, 0, 0.35, 30)
+    Line.Position = UDim2.new(0.1, 0, 0.4, 30)
     Line.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 
     local LoginBtn = Instance.new("TextButton", KeyPanel)
@@ -124,23 +147,16 @@ local function BuildUI()
     LoginBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 6)
 
-    -- RAMPING MAIN HUB (180px Width)
+    -- MAIN HUB (Ramping)
     Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 180, 0, 360)
+    Main.Size = UDim2.new(0, 170, 0, 360)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
     Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
-    Main.BackgroundTransparency = 0.15
+    Main.BackgroundTransparency = 0.1
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
     Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 170, 255)
-
-    local MHead = Instance.new("TextLabel", Main)
-    MHead.Size = UDim2.new(1, 0, 0, 35)
-    MHead.Text = "PHANTOM v290"
-    MHead.TextColor3 = Color3.fromRGB(0, 170, 255)
-    MHead.BackgroundTransparency = 1
-    MHead.Font = Enum.Font.GothamBold
 
     LoginBtn.MouseButton1Click:Connect(function()
         local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
@@ -158,7 +174,7 @@ end
 
 BuildUI()
 
--- [[ 4. NAVIGATION ]] --
+-- [[ 5. NAVIGATION ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
@@ -170,8 +186,8 @@ end
 
 for i = 1, #Names do
     local b = Instance.new("TextButton", Main)
-    b.Size = UDim2.new(1, -16, 0, 45)
-    b.Position = UDim2.new(0, 8, 0, (i * 52) - 10)
+    b.Size = UDim2.new(1, -12, 0, 48)
+    b.Position = UDim2.new(0, 6, 0, (i * 54) - 20)
     b.Font = Enum.Font.GothamBold
     b.TextColor3 = Color3.new(1, 1, 1)
     b.TextSize = 8
