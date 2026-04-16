@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v400: OMEGA-CORE - ABSOLUTE PHYSICS FIX ]] --
+-- [[ SKYJACK RBX v500: PHANTOM-CORE - TOTAL RESET & STABILITY ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -7,7 +7,7 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Central Controllers
+-- Master Control
 local Running = true
 local Screen, Main, KeyPanel
 local Toggles = {Speed = false, WallPass = false, InfJump = false, Vip = false, HideName = false, Shield = false}
@@ -16,12 +16,7 @@ local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP PASS INJECT
 local Buttons = {}
 local Index = 1
 
--- Physics Rig: Linear Velocity (Bukan CFrame agar tidak melompat)
-local SpeedForce = Instance.new("BodyVelocity")
-SpeedForce.MaxForce = Vector3.new(100000, 0, 100000) -- X & Z Only
-SpeedForce.Velocity = Vector3.new(0, 0, 0)
-
--- [[ 1. GHOST ENGINE: ANTI-DETECTION ]] --
+-- [[ 1. GHOST IDENTITY (HIDE NAME) ]] --
 local function StealthLogic(char)
     if not char then return end
     task.spawn(function()
@@ -32,9 +27,7 @@ local function StealthLogic(char)
                     if hum then
                         hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                         hum.DisplayName = " "
-                        hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
                     end
-                    -- Agresif menghapus tag nama dari sistem game
                     for _, v in pairs(char:GetDescendants()) do
                         if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") then
                             v:Destroy()
@@ -42,48 +35,44 @@ local function StealthLogic(char)
                     end
                 end)
             end
-            task.wait(0.2)
+            task.wait(0.3)
         end
     end)
 end
 lp.CharacterAdded:Connect(StealthLogic)
 
--- [[ 2. OMEGA PHYSICS: STAIRS & MOUNT STABILITY ]] --
-rs.Heartbeat:Connect(function()
+-- [[ 2. PHYSICS ENGINE: VELOCITY LOCKING ]] --
+rs.Stepped:Connect(function()
     if not Running or not lp.Character then return end
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
     local root = lp.Character:FindFirstChild("HumanoidRootPart")
     
     if not hum or not root then return end
 
-    -- SPEED & MOUNT SYSTEM
+    -- SPEED & MOUNT STABILITY
     if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
-        -- Deteksi Seat/Mount untuk sinkronisasi kecepatan tunggangan
-        local activeRoot = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
-        
-        SpeedForce.Parent = activeRoot
-        SpeedForce.Velocity = hum.MoveDirection * 85 -- Kecepatan tinggi namun stabil secara fisik
-        hum.HipHeight = 2.0 -- Suspensi otomatis agar tidak nyangkut di anak tangga
-    else
-        SpeedForce.Velocity = Vector3.new(0, 0, 0)
-        SpeedForce.Parent = nil
-        if not hum.SeatPart then hum.HipHeight = 0 end
+        local target = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
+        -- Dorongan Linear (X, Z) tanpa mengganggu gaya gravitasi (Y)
+        local vel = hum.MoveDirection * 90 
+        target.Velocity = Vector3.new(vel.X, target.Velocity.Y, vel.Z)
     end
 
-    -- NOCLIP (WALL PASS) - Hanya aktif saat ditekan
+    -- NOCLIP (WALL PASS)
     if Toggles.WallPass then
         for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
     else
-        -- Kembalikan Collision Normal
+        -- Force-Reset Collision (PENTING AGAR TIDAK TEMBUS LANTAI)
         for _, v in pairs(lp.Character:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
+            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then 
+                v.CanCollide = true 
+            end
         end
     end
 end)
 
--- [[ 3. JUMP & CORE INJECTIONS ]] --
+-- [[ 3. JUMPING & CORE INJECTIONS ]] --
 uis.JumpRequest:Connect(function()
     if Running and Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
@@ -92,6 +81,7 @@ uis.JumpRequest:Connect(function()
 end)
 
 local function StartInjections()
+    -- ANTI-BAN SHIELD (KICK BYPASS)
     local mt = getrawmetatable(game)
     local old = mt.__namecall
     setreadonly(mt, false)
@@ -101,14 +91,15 @@ local function StartInjections()
     end)
     setreadonly(mt, true)
     
-    -- VIP Injector
+    -- VIP INJECTOR
     task.spawn(function()
-        while Running and task.wait(0.7) do
-            if Toggles.Vip and root then
+        while Running and task.wait(0.8) do
+            if Toggles.Vip and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                local r = lp.Character.HumanoidRootPart
                 for _, v in pairs(workspace:GetDescendants()) do
                     if v:IsA("TouchTransmitter") and (v.Parent.Name:lower():find("vip") or v.Parent.Name:lower():find("pass")) then
-                        firetouchinterest(root, v.Parent, 0)
-                        firetouchinterest(root, v.Parent, 1)
+                        firetouchinterest(r, v.Parent, 0)
+                        firetouchinterest(r, v.Parent, 1)
                     end
                 end
             end
@@ -116,25 +107,25 @@ local function StartInjections()
     end)
 end
 
--- [[ 4. UI: APEX AUTH & HUB DESIGN ]] --
+-- [[ 4. UI BUILD: PHANTOM DESIGN ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "OMEGA_V400" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "PHANTOM_V500" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "OMEGA_V400"
+    Screen.Name = "PHANTOM_V500"
     Screen.IgnoreGuiInset = true
 
     -- LOGIN PANEL
     KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 240, 0, 150)
     KeyPanel.Position = UDim2.new(0.5, -120, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(10, 11, 14)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 8)
     Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 160, 255)
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
     KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "ENTER LICENSE"
+    KeyInput.PlaceholderText = "LICENSE KEY"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
     KeyInput.TextColor3 = Color3.new(1,1,1)
@@ -153,7 +144,7 @@ local function BuildUI()
     Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 165, 0, 340)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(8, 9, 11)
+    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     Main.BackgroundTransparency = 0.1
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
@@ -173,12 +164,12 @@ end
 
 BuildUI()
 
--- [[ 5. CONTROLS ]] --
+-- [[ 5. CONTROLS & NAVIGATION ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
         b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 160, 255) or Color3.fromRGB(15, 16, 20)
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 160, 255) or Color3.fromRGB(25, 25, 30)
         b.BackgroundTransparency = (i == Index) and 0 or 0.6
     end
 end
