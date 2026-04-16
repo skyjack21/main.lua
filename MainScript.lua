@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v900: APEX-STABLE - SPECIALIZED FOR MOUNT & TOP TIME ]] --
+-- [[ SKYJACK RBX v1000: OMEGA-CORE - ABSOLUTE RESET ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -7,17 +7,17 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Master States
+-- Core Variables
 local Running = true
 local Screen, Main, KeyPanel
 local Toggles = {Speed = false, WallPass = false, InfJump = false, Vip = false, HideName = false, Shield = false}
 local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield"}
-local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP PASS INJECT", "GHOST IDENTITY", "ANTI-BAN SHIELD"}
+local Names = {"ULTRA SPEED", "NOCLIP PASS", "INFINITE JUMP", "VIP INJECTOR", "GHOST MODE", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 
--- [[ 1. GHOST IDENTITY: AGRESSIVE CLEANUP ]] --
-local function GhostMode()
+-- [[ 1. GHOST MODE ENGINE ]] --
+local function GhostLogic()
     task.spawn(function()
         while Running do
             if Toggles.HideName and lp.Character then
@@ -27,55 +27,49 @@ local function GhostMode()
                         hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                         hum.DisplayName = " "
                     end
-                    -- Menghapus Tag Nama buatan game yang sering muncul di kepala
                     for _, v in pairs(lp.Character:GetDescendants()) do
-                        if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("tag") or v.Name:lower():find("name") then
+                        if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") then
                             v:Destroy()
                         end
                     end
                 end)
             end
-            task.wait(0.1)
+            task.wait(0.2)
         end
     end)
 end
 
--- [[ 2. MOUNT & TOP TIME CORE PHYSICS ]] --
-rs.Stepped:Connect(function()
+-- [[ 2. MOUNT-READY SPEED ENGINE ]] --
+rs.Heartbeat:Connect(function()
     if not Running or not lp.Character then return end
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
     local root = lp.Character:FindFirstChild("HumanoidRootPart")
     
     if not hum or not root then return end
 
+    -- Logic Pergerakan Utama
     if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
-        -- ANALISIS MOUNT: Mencari apakah pemain sedang duduk di Seat/Tunggangan
-        local mountPart = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and (hum.SeatPart.Parent.PrimaryPart or hum.SeatPart) or root
+        -- Secara otomatis mendeteksi jika sedang menaiki Mount/Tunggangan
+        local target = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and (hum.SeatPart.Parent.PrimaryPart or hum.SeatPart) or root
         
-        -- Mengunci sumbu Y agar tidak melompat liar dan fokus pada dorongan horisontal
-        -- Menggunakan CFrame Lerp halus (0.55) agar tangga terasa seperti lantai datar
-        local dir = hum.MoveDirection
-        mountPart.CFrame = mountPart.CFrame + Vector3.new(dir.X * 0.55, 0, dir.Z * 0.55)
-        
-        -- PlatformStanding aktif agar karakter tidak 'glitch' saat kencang
-        hum.PlatformStand = true 
-    else
-        if hum.PlatformStand then hum.PlatformStand = false end
+        -- Kecepatan 0.8: Kencang namun tetap aman dari deteksi server
+        local moveVelocity = hum.MoveDirection * 0.8
+        target.CFrame = target.CFrame + moveVelocity
     end
 
-    -- NOCLIP LOGIC
+    -- NOCLIP (WALL PASS)
     if Toggles.WallPass then
-        for _, v in pairs(lp.Character:GetChildren()) do
+        for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
     else
-        for _, v in pairs(lp.Character:GetChildren()) do
+        for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
         end
     end
 end)
 
--- [[ 3. INFINITE JUMP & INJECTIONS ]] --
+-- [[ 3. JUMP & SYSTEM INJECTIONS ]] --
 uis.JumpRequest:Connect(function()
     if Running and Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
@@ -84,7 +78,7 @@ uis.JumpRequest:Connect(function()
 end)
 
 local function StartInjections()
-    -- ANTI-BAN (KICK PROTECTION)
+    -- ANTI-KICK SHIELD
     local mt = getrawmetatable(game)
     local old = mt.__namecall
     setreadonly(mt, false)
@@ -109,24 +103,24 @@ local function StartInjections()
     end)
 end
 
--- [[ 4. PRECISE UI DESIGN ]] --
+-- [[ 4. MINIMALIST UI ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "APEX_V900" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "OMEGA_V1000" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "APEX_V900"
+    Screen.Name = "OMEGA_V1000"
     Screen.IgnoreGuiInset = true
 
     KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 240, 0, 150)
     KeyPanel.Position = UDim2.new(0.5, -120, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 8)
     Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 160, 255)
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
     KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "ENTER PRODUCT KEY"
+    KeyInput.PlaceholderText = "PASTE KEY HERE"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
     KeyInput.TextColor3 = Color3.new(1,1,1)
@@ -135,7 +129,7 @@ local function BuildUI()
     local LoginBtn = Instance.new("TextButton", KeyPanel)
     LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
     LoginBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
-    LoginBtn.Text = "AUTHENTICATE"
+    LoginBtn.Text = "LOG IN"
     LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
     LoginBtn.TextColor3 = Color3.new(1,1,1)
     LoginBtn.Font = Enum.Font.GothamBold
@@ -144,8 +138,7 @@ local function BuildUI()
     Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 160, 0, 340)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
-    Main.BackgroundTransparency = 0.1
+    Main.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
@@ -156,7 +149,7 @@ local function BuildUI()
         if success then
             local data = HttpService:JSONDecode(result)
             if data.KEY_LIST[KeyInput.Text] then
-                KeyPanel:Destroy() Main.Visible = true StartInjections() GhostMode() Toggles.Shield = true
+                KeyPanel:Destroy() Main.Visible = true StartInjections() GhostLogic() Toggles.Shield = true
             end
         end
     end)
