@@ -7,7 +7,7 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 15)
 
 -- GANTI DENGAN LINK RAW GIST keys.json KAMU
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/7780590550bc4803b328b34544669e81af77bb0d/gistfile1.txt" 
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt" 
 
 -- [[ 1. UI BUILDER (LOGIN & CHEAT PANELS) ]] --
 local function BuildUI()
