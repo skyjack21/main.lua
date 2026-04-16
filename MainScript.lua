@@ -1,22 +1,22 @@
--- [[ OMNI v146: MOUNT INDEPENDENCE - SCHEDULER STABILITY ]] --
+-- [[ OMNI v146: MOUNT INDEPENDENCE - SELF DESTRUCT FIX ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
 
--- Memastikan PlayerGui benar-benar tersedia sebelum lanjut [cite: 1, 12]
+-- Memastikan PlayerGui benar-benar tersedia [cite: 12]
 local pgui = lp:FindFirstChild("PlayerGui") or lp:WaitForChild("PlayerGui", 20)
 
--- URL DATABASE KEY [cite: 12]
+-- URL DATABASE KEY KAMU [cite: 12]
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Deklarasi Global agar tidak Nil saat dipanggil fungsi lain
+-- Deklarasi Global untuk mencegah error "nil value" 
 local Screen, KeyPanel, Main, Status, KeyInput
 
 -- [[ 1. UI CONSTRUCTOR ]] --
 local function InitializeUI()
-    -- Hapus versi lama jika ada [cite: 1, 12]
+    -- Hapus versi lama jika ada [cite: 12]
     for _, old in ipairs(pgui:GetChildren()) do
         if old.Name:find("OMNI_SECURE") then old:Destroy() end
     end
@@ -49,7 +49,7 @@ local function InitializeUI()
     KeyInput.PlaceholderText = "Enter Key Here..."
     KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     KeyInput.TextColor3 = Color3.new(1, 1, 1)
-    KeyInput.Text = "" -- Memastikan tidak nil [cite: 14]
+    KeyInput.Text = "" 
     Instance.new("UICorner", KeyInput)
 
     local CheckBtn = Instance.new("TextButton", KeyPanel)
@@ -67,7 +67,7 @@ local function InitializeUI()
     Status.Text = "Awaiting Key..."
     Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 
-    -- PANEL CHEAT (HIDDEN) [cite: 16]
+    -- PANEL CHEAT UTAMA [cite: 16]
     Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 240, 0, 520)
     Main.Position = UDim2.new(0.1, 0, 0.2, 0)
@@ -85,11 +85,10 @@ local function InitializeUI()
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
 
-    -- Logika Cek Key [cite: 18]
+    -- Logika Cek Key [cite: 18, 19]
     CheckBtn.MouseButton1Click:Connect(function()
         local input = KeyInput.Text
         Status.Text = "Verifying..."
-        
         local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
         if success then
             local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(result) end)
@@ -108,17 +107,15 @@ local function InitializeUI()
     return Main
 end
 
--- Menjalankan Inisialisasi
 local MainFrame = InitializeUI()
 
--- [[ 2. ENGINE & CONTROLS ]] --
+-- [[ 2. ENGINE LOGIC ]] --
 local Toggles = {Speed = false, SafeClamp = false}
 local Keys = {"Speed", "SafeClamp"}
 local Names = {"SPEED ENGINE", "SAFE CLAMP"}
 local Buttons = {}
 local Index, SpeedMult = 1, 2.5
 
--- Penggerak Utama [cite: 6, 22]
 rs.RenderStepped:Connect(function()
     if not MainFrame or not MainFrame.Visible then return end
     local char = lp.Character
@@ -126,10 +123,10 @@ rs.RenderStepped:Connect(function()
     local hum = char and char:FindFirstChild("Humanoid")
     
     if root and hum and hum.MoveDirection.Magnitude > 0 then
-        if Toggles.Speed then root.CFrame = root.CFrame + (hum.MoveDirection * SpeedMult) end
+        if Toggles.Speed then root.CFrame = root.CFrame + (hum.MoveDirection * SpeedMult) end -- [cite: 6]
         if Toggles.SafeClamp then
             local ray = workspace:Raycast(root.Position, hum.MoveDirection * 5)
-            if ray then root.Velocity = Vector3.new(0, root.Velocity.Y, 0) end -- [cite: 7]
+            if ray then root.Velocity = Vector3.new(0, root.Velocity.Y, 0) end -- [cite: 7, 22]
         end
     end
 end)
@@ -137,12 +134,11 @@ end)
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
-        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]") -- [cite: 9, 23]
+        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]") -- [cite: 23]
         b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30)
     end
 end
 
--- Generate Tombol [cite: 10, 24]
 for i = 1, #Names do
     local b = Instance.new("TextButton", MainFrame)
     b.Size = UDim2.new(1, -20, 0, 65)
@@ -153,13 +149,21 @@ for i = 1, #Names do
     table.insert(Buttons, b)
 end
 
--- Input Handler [cite: 11, 25]
+-- [[ 3. INPUT HANDLER (F8 & L FIX) ]] --
 uis.InputBegan:Connect(function(k, g)
-    if k.KeyCode == Enum.KeyCode.F8 then Screen:Destroy() end
-    if k.KeyCode == Enum.KeyCode.L and not KeyPanel.Visible then MainFrame.Visible = not MainFrame.Visible end
+    -- FITUR F8: Hapus total skrip dan UI dari game
+    if k.KeyCode == Enum.KeyCode.F8 then 
+        Screen:Destroy() 
+        return -- Keluar agar tidak menjalankan perintah lain
+    end
+
+    -- Tombol L: Hanya berfungsi jika Login sudah selesai dan UI belum dihapus F8
+    if k.KeyCode == Enum.KeyCode.L and Screen.Parent ~= nil and not KeyPanel.Visible then 
+        MainFrame.Visible = not MainFrame.Visible -- 
+    end
     
     if g or not MainFrame.Visible then return end
-    if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names Refresh()
+    if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names Refresh() -- [cite: 11]
     elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1 Refresh()
     elseif k.KeyCode == Enum.KeyCode.Return then Toggles[Keys[Index]] = not Toggles[Keys[Index]] Refresh() end
 end)
