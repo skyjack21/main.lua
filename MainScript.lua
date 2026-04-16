@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v350: SKYJACK - SLOPE & CLIPPING FIX ]] --
+-- [[ SKYJACK RBX v360: ELEVATE - THE ULTIMATE STAIRS & SLOPE FIX ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -15,16 +15,19 @@ local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield"}
 local Names = {"OVERDRIVE SPEED", "WALL PASS", "INFINITE JUMP", "VIP PASS INJECT", "GHOST IDENTITY", "ANTI-BAN SHIELD"}
 local Buttons = {}
 local Index = 1
-local SpeedVal = 2.45
+local SpeedVal = 2.4 -- Optimized for Stairs Stability
 
--- [[ 1. SLOPE & HEIGHT ALIGNMENT (ANTI-CLIPPING) ]] --
-local function GetHeightAdjustment(root)
-    local ray = Ray.new(root.Position, Vector3.new(0, -5, 0))
-    local part, pos = workspace:FindPartOnRayWithIgnoreList(ray, {lp.Character})
-    if part then
-        return pos.Y + 3 -- Pastikan karakter tetap 3 unit di atas tanah
-    end
-    return root.Position.Y
+-- [[ 1. STAIRS & SLOPE ENGINE (ANTI-CLIP) ]] --
+local function GetSurfaceData(root)
+    -- Raycast down to find floor
+    local downRay = Ray.new(root.Position, Vector3.new(0, -10, 0))
+    local _, posDown = workspace:FindPartOnRayWithIgnoreList(downRay, {lp.Character})
+    
+    -- Raycast forward to detect stairs/walls
+    local forwardRay = Ray.new(root.Position, root.CFrame.LookVector * 2)
+    local partAhead = workspace:FindPartOnRayWithIgnoreList(forwardRay, {lp.Character})
+    
+    return posDown.Y, partAhead
 end
 
 -- [[ 2. PHYSICS ENGINE ]] --
@@ -36,16 +39,20 @@ rs.Heartbeat:Connect(function()
     if Toggles.Speed and root and hum and hum.MoveDirection.Magnitude > 0 then
         local moveObj = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and hum.SeatPart.Parent.PrimaryPart or root
         
-        -- Kalkulasi pergerakan horizontal
+        local floorY, hittingWall = GetSurfaceData(moveObj)
         local moveDir = hum.MoveDirection * SpeedVal
-        local newPos = moveObj.Position + moveDir
         
-        -- SLOPE FIX: Menyesuaikan sumbu Y agar tidak nembus tanjakan
-        local targetY = GetHeightAdjustment(moveObj)
-        moveObj.CFrame = CFrame.new(newPos.X, targetY, newPos.Z) * moveObj.CFrame.Rotation
+        -- ELEVATE LOGIC: Jika menabrak sesuatu (tangga), beri boost Y agar naik
+        local yOffset = 3 -- Default height
+        if hittingWall and not Toggles.WallPass then
+            yOffset = 4.5 -- Lift character over steps
+        end
+        
+        local targetPos = moveObj.Position + moveDir
+        moveObj.CFrame = CFrame.new(targetPos.X, floorY + yOffset, targetPos.Z) * moveObj.CFrame.Rotation
     end
 
-    -- Wall Pass Control
+    -- Wall Pass Fix: Ensure no accidental clipping when OFF
     if Toggles.WallPass then
         for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
@@ -57,7 +64,7 @@ rs.Heartbeat:Connect(function()
     end
 end)
 
--- [[ 3. STEALTH & JUMP ENGINE ]] --
+-- [[ 3. STEALTH & JUMP (RE-VERIFIED) ]] --
 local function ApplyStealth(char)
     if not char then return end
     task.spawn(function()
@@ -77,6 +84,7 @@ local function ApplyStealth(char)
 end
 lp.CharacterAdded:Connect(ApplyStealth)
 
+-- Infinite Jump
 uis.JumpRequest:Connect(function()
     if Running and Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
@@ -84,7 +92,7 @@ uis.JumpRequest:Connect(function()
     end
 end)
 
--- [[ 4. CORE INJECTIONS ]] --
+-- [[ 4. CORE AUTH & INJECTIONS ]] --
 local function StartInjections()
     local mt = getrawmetatable(game)
     local old = mt.__namecall
@@ -109,24 +117,24 @@ local function StartInjections()
     end)
 end
 
--- [[ 5. DESIGN & NAVIGATION ]] --
+-- [[ 5. DESIGN: PREMIUM MINIMALIST ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "APEX_STABLE" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "ELEVATE_V360" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "APEX_STABLE"
+    Screen.Name = "ELEVATE_V360"
     Screen.IgnoreGuiInset = true
 
-    -- LOGIN PANEL
+    -- LOGIN
     KeyPanel = Instance.new("Frame", Screen)
-    KeyPanel.Size = UDim2.new(0, 250, 0, 160)
-    KeyPanel.Position = UDim2.new(0.5, -125, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+    KeyPanel.Size = UDim2.new(0, 240, 0, 150)
+    KeyPanel.Position = UDim2.new(0.5, -120, 0.4, 0)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 8)
     Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 170, 255)
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
-    KeyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
     KeyInput.PlaceholderText = "PRODUCT KEY"
     KeyInput.Text = ""
     KeyInput.BackgroundTransparency = 1
@@ -135,11 +143,11 @@ local function BuildUI()
 
     local Line = Instance.new("Frame", KeyPanel)
     Line.Size = UDim2.new(0.8, 0, 0, 1)
-    Line.Position = UDim2.new(0.1, 0, 0.4, 30)
+    Line.Position = UDim2.new(0.1, 0, 0.35, 30)
     Line.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 
     local LoginBtn = Instance.new("TextButton", KeyPanel)
-    LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
+    LoginBtn.Size = UDim2.new(0.8, 0, 0, 32)
     LoginBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
     LoginBtn.Text = "AUTHENTICATE"
     LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
@@ -147,11 +155,11 @@ local function BuildUI()
     LoginBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 5)
 
-    -- MAIN HUB
+    -- HUB
     Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 170, 0, 350)
+    Main.Size = UDim2.new(0, 165, 0, 340)
     Main.Position = UDim2.new(0.02, 0, 0.3, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+    Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
     Main.BackgroundTransparency = 0.1
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
@@ -175,8 +183,8 @@ local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
         b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(20, 20, 25)
-        b.BackgroundTransparency = (i == Index) and 0 or 0.6
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(20, 20, 20)
+        b.BackgroundTransparency = (i == Index) and 0 or 0.7
     end
 end
 
