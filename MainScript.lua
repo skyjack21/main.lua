@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v1600: ULTIMATE MOUNT-STABLE - REBUILT FROM SCRATCH ]] --
+-- [[ SKYJACK RBX v1700: ELITE-STREAMER - FULLY FUNCTIONAL RESET ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local rs = game:GetService("RunService")
@@ -7,26 +7,35 @@ local HttpService = game:GetService("HttpService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Master Configuration
+-- Final State Logic
 local Running = true
 local Screen, Main, KeyPanel
 local Toggles = {Speed = false, WallPass = false, InfJump = false, Vip = false, HideName = false, Shield = false, AutoWalk = false}
 local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield", "AutoWalk"}
-local Names = {"STABLE MOUNT SPEED", "GHOST NOCLIP", "INFINITE JUMP", "VIP PASS INJECT", "GHOST IDENTITY", "ANTI-KICK PROTECTION", "STEALTH AUTO SUMMIT"}
+local Names = {"STABLE SPEED", "GHOST NOCLIP", "INFINITE JUMP", "VIP INJECTOR", "GHOST IDENTITY", "ANTI-KICK SHIELD", "STEALTH AUTO WALK"}
 local Buttons = {}
 local Index = 1
 
--- [[ 1. GHOST IDENTITY - CLEAN LIVE MODE ]] --
+-- [[ 1. INFINITE JUMP FIX (PHYSICAL INJECTION) ]] --
+-- Fitur ini sekarang terpisah dari loop utama agar tidak delay
+uis.JumpRequest:Connect(function()
+    if Toggles.InfJump and lp.Character then
+        local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- [[ 2. GHOST IDENTITY (RECURSIVE CLEANER) ]] --
 local function GhostLogic()
     task.spawn(function()
         while Running do
             if Toggles.HideName and lp.Character then
                 pcall(function()
-                    local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+                    lp.Character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                     for _, v in pairs(lp.Character:GetDescendants()) do
                         if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v:IsA("TextLabel") or v.Name:lower():find("tag") then
-                            v.Enabled = false
                             v:Destroy()
                         end
                     end
@@ -37,37 +46,59 @@ local function GhostLogic()
     end)
 end
 
--- [[ 2. MOUNT-SYNC ENGINE (STAIRS & SLOPE FIX) ]] --
-rs.Stepped:Connect(function()
+-- [[ 3. VIP & ANTI-KICK (METATABLE BYPASS) ]] --
+local function SecureInjections()
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        -- Memblokir fungsi Kick dari script game
+        if Toggles.Shield and (method == "Kick" or method == "kick") then return nil end
+        return old(self, ...)
+    end)
+    setreadonly(mt, true)
+
+    -- VIP AUTO-TOUCHER (PHYSICAL INTEREST)
+    task.spawn(function()
+        while Running do
+            if Toggles.Vip and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("TouchTransmitter") and (v.Parent.Name:lower():find("vip") or v.Parent.Name:lower():find("pass")) then
+                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 0)
+                        firetouchinterest(lp.Character.HumanoidRootPart, v.Parent, 1)
+                    end
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+-- [[ 4. SPEED & AUTO-WALK ENGINE (STAIRS COMPATIBLE) ]] --
+rs.Heartbeat:Connect(function()
     if not Running or not lp.Character then return end
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
     local root = lp.Character:FindFirstChild("HumanoidRootPart")
     if not hum or not root then return end
 
-    -- SPEED & AUTO SUMMIT LOGIC
     if (Toggles.Speed and hum.MoveDirection.Magnitude > 0) or Toggles.AutoWalk then
-        -- Deteksi apakah sedang di Mount
-        local activeTarget = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and (hum.SeatPart.Parent.PrimaryPart or hum.SeatPart) or root
-        
+        local activeObj = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and (hum.SeatPart.Parent.PrimaryPart or hum.SeatPart) or root
         local moveDir = hum.MoveDirection
         
-        -- AUTO SUMMIT: Tanpa garis, langsung menuju objektif
+        -- Auto Walk Logic (Target Finder)
         if Toggles.AutoWalk and hum.MoveDirection.Magnitude == 0 then
             local summit = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit") or workspace:FindFirstChild("End")
-            if summit then
-                moveDir = (summit.Position - root.Position).Unit
-            end
+            if summit then moveDir = (summit.Position - root.Position).Unit end
         end
 
-        -- PERBAIKAN TANGGA: Menggunakan Frame-by-Frame CFrame Lerping agar tidak nembus (Noclip)
-        -- Speed 75: Cepat, Stabil, dan tetap menapak tangga dengan sempurna
-        local speedValue = 75
+        -- Fisika Pergerakan: Menggunakan pengalian CFrame agar tangga tetap terdeteksi
         if moveDir.Magnitude > 0 then
-            activeTarget.CFrame = activeTarget.CFrame + (moveDir * (speedValue / 100))
+            activeObj.CFrame = activeObj.CFrame + (moveDir * 0.75) -- Speed konstan & stabil
         end
     end
 
-    -- GHOST NOCLIP (Hanya aktif jika dicentang)
+    -- GHOST NOCLIP (Physical Collision Toggle)
     if Toggles.WallPass then
         for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
@@ -79,49 +110,24 @@ rs.Stepped:Connect(function()
     end
 end)
 
--- [[ 3. VIP & ANTI-KICK SECURITY ]] --
-local function StartInjections()
-    local mt = getrawmetatable(game)
-    local old = mt.__namecall
-    setreadonly(mt, false)
-    mt.__namecall = newcclosure(function(self, ...)
-        if Toggles.Shield and (getnamecallmethod() == "Kick" or getnamecallmethod() == "kick") then return nil end
-        return old(self, ...)
-    end)
-    setreadonly(mt, true)
-    
-    task.spawn(function()
-        while Running and task.wait(0.5) do
-            if Toggles.Vip and root then
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("TouchTransmitter") and (v.Parent.Name:lower():find("vip") or v.Parent.Name:lower():find("pass")) then
-                        firetouchinterest(root, v.Parent, 0)
-                        firetouchinterest(root, v.Parent, 1)
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- [[ 4. PRO UI SYSTEM ]] --
+-- [[ 5. MINIMALIST PRO UI ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "ULTIMATE_V1600" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "STREAMER_V1700" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "ULTIMATE_V1600"
+    Screen.Name = "STREAMER_V1700"
     Screen.IgnoreGuiInset = true
 
     KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 240, 0, 150)
     KeyPanel.Position = UDim2.new(0.5, -120, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 200, 255)
+    Instance.new("UIStroke", KeyPanel).Color = Color3.fromRGB(0, 255, 150)
 
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
     KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "ENTER KEY"
+    KeyInput.PlaceholderText = "INPUT KEY"
     KeyInput.TextColor3 = Color3.new(1,1,1)
     KeyInput.BackgroundTransparency = 1
     KeyInput.Font = Enum.Font.Gotham
@@ -129,8 +135,8 @@ local function BuildUI()
     local LoginBtn = Instance.new("TextButton", KeyPanel)
     LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
     LoginBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
-    LoginBtn.Text = "ACTIVATE"
-    LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+    LoginBtn.Text = "AUTHENTICATE"
+    LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
     LoginBtn.TextColor3 = Color3.new(1,1,1)
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 5)
 
@@ -141,14 +147,14 @@ local function BuildUI()
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-    Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 200, 255)
+    Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 255, 150)
 
     LoginBtn.MouseButton1Click:Connect(function()
         local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
         if success then
             local data = HttpService:JSONDecode(result)
             if data.KEY_LIST[KeyInput.Text] then
-                KeyPanel:Destroy() Main.Visible = true StartInjections() GhostLogic() Toggles.Shield = true
+                KeyPanel:Destroy() Main.Visible = true SecureInjections() GhostLogic() Toggles.Shield = true
             end
         end
     end)
@@ -159,8 +165,8 @@ BuildUI()
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
-        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 160, 255) or Color3.fromRGB(25, 25, 30)
+        b.Text = Names[i] .. (Toggles[k] and " [ACTIVE]" or " [OFF]")
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(25, 25, 30)
     end
 end
 
