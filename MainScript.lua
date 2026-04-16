@@ -1,16 +1,14 @@
--- [[ SKYJACK RBX v2100: SUPREME-OVERLOAD - NO CODE CUT ]] --
--- Global Setup & Services
+-- [[ SKYJACK RBX v2400: ELITE-TOTAL - REBUILT FROM ZERO ]] --
+task.wait(0.2) -- Stabilizer for Executor
+
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
-local MarketplaceService = game:GetService("MarketplaceService")
-local PathfindingService = game:GetService("PathfindingService")
-local StarterGui = game:GetService("StarterGui")
+local Marketplace = game:GetService("MarketplaceService")
 
--- Global Environment (Persistent across resets)
-getgenv().SkyjackToggles = getgenv().SkyjackToggles or {
+-- [[ 1. GLOBAL CORE CONFIG ]] --
+getgenv().SkyTotal = {
     Speed = false,
     WallPass = false,
     InfJump = false,
@@ -20,14 +18,13 @@ getgenv().SkyjackToggles = getgenv().SkyjackToggles or {
     AutoWalk = false
 }
 
-local Toggles = getgenv().SkyjackToggles
-local Running = true
+local T = getgenv().SkyTotal
 local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield", "AutoWalk"}
-local Names = {"SUPREME SPEED (EXTREME)", "GHOST NOCLIP (ALL)", "PHYSICAL INF JUMP", "ULTRA VIP BYPASS", "GHOST IDENTITY (DEEP)", "ANTI-KICK SHIELD", "AUTO SUMMIT (STEALTH)"}
+local Names = {"ELITE SPEED (1.95)", "GHOST NOCLIP", "PHYSICAL INF JUMP", "SYSTEM VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK SHIELD", "STEALTH AUTO SUMMIT"}
 local Buttons = {}
 local Index = 1
 
--- [[ 1. SECURITY & BYPASS MODULE (METATABLE) ]] --
+-- [[ 2. MASTER BYPASS (METATABLE HOOK) ]] --
 local mt = getrawmetatable(game)
 local oldNamecall = mt.__namecall
 local oldIndex = mt.__index
@@ -36,82 +33,53 @@ setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     local args = {...}
-    
-    -- ANTI-KICK BYPASS
-    if Toggles.Shield and (method == "Kick" or method == "kick") then
-        warn("SKYJACK: Blocked an attempt to kick you.")
+
+    -- ANTI-KICK SYSTEM
+    if T.Shield and (method == "Kick" or method == "kick") then
         return nil
     end
-    
-    -- VIP & GAMEPASS BYPASS
-    if Toggles.Vip then
-        if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" or method == "CheckGamepass" or method == "GetProductInfo" then
+
+    -- VIP SYSTEM BYPASS
+    if T.Vip then
+        if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" or method == "CheckGamepass" then
             return true
         end
     end
-    
+
     return oldNamecall(self, unpack(args))
 end)
 
 mt.__index = newcclosure(function(t, k)
-    if Toggles.Vip then
-        if k == "UserOwnsGamePassAsync" or k == "PlayerOwnsAsset" then
-            return function() return true end
-        end
+    if T.Vip and (k == "UserOwnsGamePassAsync" or k == "PlayerOwnsAsset") then
+        return function() return true end
     end
     return oldIndex(t, k)
 end)
+
 setreadonly(mt, true)
 
--- [[ 2. IDENTITY MASKING MODULE (GHOST) ]] --
-task.spawn(function()
-    while task.wait(0.01) do -- Ultra fast scan for live stream
-        if Toggles.HideName and lp.Character then
-            pcall(function()
-                local char = lp.Character
-                -- Hide Humanoid Name
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
-                
-                -- Recursive Clean
-                for _, v in pairs(char:GetDescendants()) do
-                    if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v:IsA("TextLabel") or v:IsA("ImageLabel") or v.Name:lower():find("tag") or v.Name:lower():find("name") then
-                        if v:IsA("GuiObject") then
-                            v.Visible = false
-                        elseif v:IsA("LayerCollector") then
-                            v.Enabled = false
-                        end
-                        v:Destroy()
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- [[ 3. PHYSICAL MOVEMENT MODULE (SPEED & AUTO) ]] --
-rs.RenderStepped:Connect(function()
+-- [[ 3. MOVEMENT & PHYSICS ENGINE ]] --
+rs.Heartbeat:Connect(function()
     if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
     local root = lp.Character.HumanoidRootPart
     local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-    
-    -- SPEED EXTREME (1.55 Scale) - Optimized for Stairs
-    if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
-        local activeObj = (hum.SeatPart and hum.SeatPart.Parent:IsA("Model")) and (hum.SeatPart.Parent.PrimaryPart or hum.SeatPart) or root
-        -- Menggunakan pergerakan Frame-Alignment agar tidak terlempar
-        activeObj.CFrame = activeObj.CFrame + (hum.MoveDirection * 1.55)
+
+    -- SPEED (Extreme but Grounded)
+    if T.Speed and hum.MoveDirection.Magnitude > 0 then
+        -- Menggunakan penambahan CFrame untuk stabilitas di tangga/tanjakan
+        root.CFrame = root.CFrame + (hum.MoveDirection * 1.95)
     end
 
-    -- AUTO SUMMIT (Stealth Mode)
-    if Toggles.AutoWalk then
-        local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit") or workspace:FindFirstChild("End") or workspace:FindFirstChild("Finish")
+    -- STEALTH AUTO WALK (No lines, clean movement)
+    if T.AutoWalk then
+        local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit") or workspace:FindFirstChild("End")
         if target then
             hum:MoveTo(target.Position)
         end
     end
 
-    -- NOCLIP LOGIC
-    if Toggles.WallPass then
+    -- NOCLIP
+    if T.WallPass then
         for _, v in pairs(lp.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
@@ -122,55 +90,71 @@ rs.RenderStepped:Connect(function()
     end
 end)
 
--- [[ 4. JUMP & UTILITY MODULE ]] --
+-- [[ 4. SPECIAL FEATURES (INF JUMP & GHOST) ]] --
 task.spawn(function()
+    -- Infinite Jump
     uis.JumpRequest:Connect(function()
-        if Toggles.InfJump and lp.Character then
+        if T.InfJump and lp.Character then
             local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
         end
     end)
+
+    -- Identity Cleaner (Ghost Mode)
+    while task.wait(0.05) do
+        if T.HideName and lp.Character then
+            pcall(function()
+                local char = lp.Character
+                -- Force hide default name
+                char:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+                -- Scrub all tags/guis
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("tag") or v.Name:lower():find("name") then
+                        v:Destroy()
+                    end
+                end
+            end)
+        end
+    end
 end)
 
--- [[ 5. SUPREME UI INTERFACE ]] --
+-- [[ 5. ABSOLUTE UI BUILDER ]] --
 local function BuildUI()
     local pgui = lp:WaitForChild("PlayerGui")
-    if pgui:FindFirstChild("SKYJACK_SUPREME") then pgui.SKYJACK_SUPREME:Destroy() end
+    if pgui:FindFirstChild("SKY_ELITE") then pgui.SKY_ELITE:Destroy() end
     
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_SUPREME"
-    Screen.IgnoreGuiInset = true
+    Screen.Name = "SKY_ELITE"
+    Screen.ResetOnSpawn = false
     
     local Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 190, 0, 400)
-    Main.Position = UDim2.new(0.02, 0, 0.2, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
-    Main.Active, Main.Draggable = true, true
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+    Main.Size = UDim2.new(0, 185, 0, 400)
+    Main.Position = UDim2.new(0.02, 0, 0.25, 0)
+    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+    Main.Active = true
+    Main.Draggable = true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
     local Stroke = Instance.new("UIStroke", Main)
-    Stroke.Color = Color3.fromRGB(0, 255, 150)
-    Stroke.Thickness = 1.5
+    Stroke.Color = Color3.fromRGB(0, 220, 255)
+    Stroke.Thickness = 2
 
     local Header = Instance.new("TextLabel", Main)
     Header.Size = UDim2.new(1, 0, 0, 35)
-    Header.Text = "SKYJACK SUPREME v2100"
-    Header.TextColor3 = Color3.new(1,1,1)
+    Header.Text = "SKYJACK ELITE v2400"
+    Header.TextColor3 = Color3.new(1, 1, 1)
     Header.Font = Enum.Font.GothamBold
     Header.TextSize = 10
     Header.BackgroundTransparency = 1
 
     for i, name in ipairs(Names) do
         local b = Instance.new("TextButton", Main)
-        b.Size = UDim2.new(1, -16, 0, 42)
-        b.Position = UDim2.new(0, 8, 0, (i * 48) - 5)
-        b.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        b.Size = UDim2.new(1, -16, 0, 44)
+        b.Position = UDim2.new(0, 8, 0, (i * 50) - 10)
+        b.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
         b.TextColor3 = Color3.new(1, 1, 1)
         b.Text = name .. " [OFF]"
         b.Font = Enum.Font.GothamBold
         b.TextSize = 8
-        b.AutoButtonColor = true
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
         table.insert(Buttons, b)
     end
@@ -178,8 +162,8 @@ local function BuildUI()
     local function Refresh()
         for i, b in ipairs(Buttons) do
             local key = Keys[i]
-            b.Text = Names[i] .. (Toggles[key] and " [ON]" or " [OFF]")
-            b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(20, 20, 25)
+            b.Text = Names[i] .. (T[key] and " [ON]" or " [OFF]")
+            b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 220, 255) or Color3.fromRGB(22, 22, 26)
             b.TextColor3 = (i == Index) and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
         end
     end
@@ -187,25 +171,14 @@ local function BuildUI()
     uis.InputBegan:Connect(function(k, g)
         if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
         if g or not Main.Visible then return end
-        if k.KeyCode == Enum.KeyCode.Up then 
-            Index = (Index > 1) and Index - 1 or #Names 
-            Refresh()
-        elseif k.KeyCode == Enum.KeyCode.Down then 
-            Index = (Index < #Names) and Index + 1 or 1 
-            Refresh()
+        if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names Refresh()
+        elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1 Refresh()
         elseif k.KeyCode == Enum.KeyCode.Return then 
             local key = Keys[Index] 
-            Toggles[key] = not Toggles[key] 
-            Refresh()
+            T[key] = not T[key] Refresh()
         end
     end)
     Refresh()
 end
 
--- Start Script
 BuildUI()
-StarterGui:SetCore("SendNotification", {
-    Title = "SKYJACK SUPREME",
-    Text = "Press 'L' to Toggle Menu",
-    Duration = 5
-})
