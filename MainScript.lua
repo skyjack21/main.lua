@@ -1,4 +1,4 @@
--- [[ SKYJACK RBX v210: PERFORMANCE - BALANCED FOR TOP TIME ]] --
+-- [[ SKYJACK RBX v220: TITAN - ULTIMATE PRECISION ]] --
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -7,19 +7,19 @@ local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 20)
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- Balanced Config
+-- Titan System States
 local Screen, KeyPanel, Main, Status, KeyInput, MinBtn
 local IsMinimized = false
 local Toggles = {Speed = false, WallPass = false, InfJump = false, VipAccess = false, HiddenMode = false, Shield = false}
 local Keys = {"Speed", "WallPass", "InfJump", "VipAccess", "HiddenMode", "Shield"}
-local Names = {"PERFORMANCE SPEED", "WALL PASS (NOCLIP)", "INFINITE JUMP", "VIP AREA ACCESS", "HIDDEN IDENTITY", "ANTI-BAN PROTECT"}
+local Names = {"TITAN SPEED", "WALL PASS (NOCLIP)", "INFINITE JUMP", "VIP AREA ACCESS", "HIDDEN IDENTITY", "ANTI-BAN PROTECT"}
 local Buttons = {}
 local Index = 1
-local BalancedSpeed = 6.2 -- Kencang tapi tetap terkendali (Sweet Spot)
-local SmoothAlpha = 0.5 -- Membuat pergerakan lebih presisi untuk belokan tajam
+local FinalSpeed = 6.8 -- Kecepatan kencang yang stabil untuk Top Time
+local LerpWeight = 0.65
 
--- [[ 1. INSTANT INJECTION (ANTI-BAN & LOGIC) ]] --
-local function SecureShield()
+-- [[ 1. PROTECTION & UTILITY ]] --
+local function ForceShield()
     local success = pcall(function()
         local mt = getrawmetatable(game)
         local old = mt.__namecall
@@ -36,7 +36,7 @@ local function SecureShield()
     return success
 end
 
--- [[ 2. PHYSICS & MOTION ENGINE ]] --
+-- [[ 2. TITAN ENGINE (FIXED SPEED-JUMP CONFLICT) ]] --
 rs.RenderStepped:Connect(function()
     local char = lp.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -44,68 +44,70 @@ rs.RenderStepped:Connect(function()
     
     if root and hum and hum.MoveDirection.Magnitude > 0 then
         if Toggles.Speed then
-            local moveDir = hum.MoveDirection
+            -- MENGGUNAKAN CFRAME TANPA MENGGANGGU VELOCITY Y (LONCAT)
+            local moveVec = hum.MoveDirection * FinalSpeed
+            local nextPos = root.Position + moveVec
+            
             if Toggles.WallPass then
-                -- Noclip Speed
-                for _, v in pairs(char:GetDescendants()) do
-                    if v:IsA("BasePart") then v.CanCollide = false end
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then p.CanCollide = false end
                 end
-                root.CFrame = root.CFrame:Lerp(root.CFrame + (moveDir * BalancedSpeed), SmoothAlpha)
+                root.CFrame = root.CFrame:Lerp(CFrame.new(nextPos, nextPos + hum.MoveDirection), LerpWeight)
             else
-                -- Smart Collision Speed (Menghindari nembus tembok secara tak sengaja)
-                local ray = workspace:Raycast(root.Position, moveDir * 2.5)
+                local ray = workspace:Raycast(root.Position, hum.MoveDirection * 3)
                 if not ray then
-                    root.CFrame = root.CFrame:Lerp(root.CFrame + (moveDir * BalancedSpeed), SmoothAlpha)
+                    -- Lerp hanya pada posisi X dan Z, biarkan Y tetap untuk gravitasi/lompat
+                    local targetCFrame = CFrame.new(nextPos.X, root.Position.Y, nextPos.Z)
+                    root.CFrame = root.CFrame:Lerp(targetCFrame, LerpWeight)
                 end
             end
         end
     end
 end)
 
--- Infinite Jump (Physics Trigger)
+-- Infinite Jump (Clean Execution)
 uis.JumpRequest:Connect(function()
     if Toggles.InfJump and lp.Character then
         local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            lp.Character.HumanoidRootPart.Velocity = Vector3.new(root.Velocity.X, 55, root.Velocity.Z)
-        end
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
     end
 end)
 
--- [[ 3. PREMIUM DESIGN UI (2026 COMMERCIAL) ]] --
+-- [[ 3. LUXURY 2026 UI DESIGN ]] --
 local function BuildUI()
-    for _, v in pairs(pgui:GetChildren()) do if v.Name == "SKYJACK_V210" then v:Destroy() end end
+    for _, v in pairs(pgui:GetChildren()) do if v.Name == "SKYJACK_TITAN" then v:Destroy() end end
     Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V210"
+    Screen.Name = "SKYJACK_TITAN"
     Screen.IgnoreGuiInset = true
 
-    -- LOGIN PANEL
+    -- LOGIN INTERFACE
     KeyPanel = Instance.new("Frame", Screen)
-    KeyPanel.Size = UDim2.new(0, 440, 0, 360)
-    KeyPanel.Position = UDim2.new(0.5, -220, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
+    KeyPanel.Size = UDim2.new(0, 420, 0, 350)
+    KeyPanel.Position = UDim2.new(0.5, -210, 0.4, 0)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+    KeyPanel.BorderSizePixel = 0
     KeyPanel.Active, KeyPanel.Draggable = true, true
-    Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 35)
+    Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 30)
     local strokeK = Instance.new("UIStroke", KeyPanel)
-    strokeK.Color = Color3.fromRGB(220, 20, 60)
-    strokeK.Thickness = 3.5
+    strokeK.Color = Color3.fromRGB(200, 0, 0)
+    strokeK.Thickness = 3
 
-    local LTitle = Instance.new("TextLabel", KeyPanel)
-    LTitle.Size = UDim2.new(1, 0, 0, 85)
-    LTitle.BackgroundColor3 = Color3.fromRGB(180, 0, 40)
-    LTitle.Text = "SKYJACK RBX | PERFORMANCE"
-    LTitle.TextColor3 = Color3.new(1,1,1)
-    LTitle.Font = Enum.Font.GothamBold
-    LTitle.TextSize = 18
-    Instance.new("UICorner", LTitle).CornerRadius = UDim.new(0, 35)
+    local LHeader = Instance.new("TextLabel", KeyPanel)
+    LHeader.Size = UDim2.new(1, 0, 0, 80)
+    LHeader.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    LHeader.Text = "SKYJACK RBX | TITAN LOGIN"
+    LHeader.TextColor3 = Color3.new(1,1,1)
+    LHeader.Font = Enum.Font.GothamBold
+    LHeader.TextSize = 18
+    Instance.new("UICorner", LHeader).CornerRadius = UDim.new(0, 30)
 
     KeyInput = Instance.new("TextBox", KeyPanel)
-    KeyInput.Size = UDim2.new(0.85, 0, 0, 65)
+    KeyInput.Size = UDim2.new(0.85, 0, 0, 60)
     KeyInput.Position = UDim2.new(0.075, 0, 0.45, 0)
-    KeyInput.PlaceholderText = "ENTER LICENSE KEY"
-    KeyInput.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    KeyInput.PlaceholderText = "ENTER PRODUCT KEY"
+    KeyInput.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     KeyInput.TextColor3 = Color3.new(1,1,1)
+    KeyInput.Font = Enum.Font.Gotham
     Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 15)
 
     local LoginBtn = Instance.new("TextButton", KeyPanel)
@@ -117,32 +119,32 @@ local function BuildUI()
     LoginBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 15)
 
-    -- MAIN CHEAT PANEL
+    -- MAIN FEATURE PANEL
     Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 340, 0, 680)
     Main.Position = UDim2.new(0.05, 0, 0.15, 0)
-    Main.BackgroundColor3 = Color3.fromRGB(8, 8, 11)
+    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
     Main.Visible = false
     Main.Active, Main.Draggable = true, true
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 35)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 30)
     local strokeM = Instance.new("UIStroke", Main)
-    strokeM.Color = Color3.fromRGB(220, 20, 60)
+    strokeM.Color = Color3.fromRGB(200, 0, 0)
     strokeM.Thickness = 3
 
     local MTitle = Instance.new("TextLabel", Main)
-    MTitle.Size = UDim2.new(1, 0, 0, 85)
-    MTitle.BackgroundColor3 = Color3.fromRGB(180, 0, 40)
-    MTitle.Text = "SKYJACK RBX"
+    MTitle.Size = UDim2.new(1, 0, 0, 80)
+    MTitle.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    MTitle.Text = "TITAN HUB"
     MTitle.TextColor3 = Color3.new(1,1,1)
     MTitle.Font = Enum.Font.GothamBold
-    MTitle.TextSize = 24
-    Instance.new("UICorner", MTitle).CornerRadius = UDim.new(0, 35)
+    MTitle.TextSize = 25
+    Instance.new("UICorner", MTitle).CornerRadius = UDim.new(0, 30)
 
     MinBtn = Instance.new("TextButton", Main)
-    MinBtn.Size = UDim2.new(0, 45, 0, 45)
-    MinBtn.Position = UDim2.new(1, -60, 0, 20)
+    MinBtn.Size = UDim2.new(0, 40, 0, 40)
+    MinBtn.Position = UDim2.new(1, -55, 0, 20)
     MinBtn.Text = "−"
-    MinBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
     MinBtn.TextColor3 = Color3.new(1,1,1)
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1, 0)
 
@@ -160,14 +162,14 @@ end
 
 BuildUI()
 
--- [[ 4. BUTTONS REFRESH ]] --
+-- [[ 4. NAVIGATION & CONTROLS ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
         b.Visible = not IsMinimized
         b.Text = Names[i] .. (Toggles[k] and " [ACTIVE]" or " [OFF]")
-        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(180, 0, 40) or Color3.fromRGB(25, 25, 30)
-        b.BackgroundTransparency = (i == Index) and 0 or 0.6
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(22, 22, 26)
+        b.BackgroundTransparency = (i == Index) and 0 or 0.4
     end
 end
 
@@ -177,7 +179,8 @@ for i = 1, #Names do
     b.Position = UDim2.new(0, 15, 0, (i * 95) - 5)
     b.Font = Enum.Font.GothamBold
     b.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 18)
+    b.TextSize = 13
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 15)
     table.insert(Buttons, b)
 end
 
@@ -190,18 +193,15 @@ uis.InputBegan:Connect(function(k, g)
     elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1 Refresh()
     elseif k.KeyCode == Enum.KeyCode.Return then 
         local key = Keys[Index]
-        if key == "Shield" then
-            Toggles.Shield = SecureShield() 
-        else
-            Toggles[key] = not Toggles[key]
-        end
+        Toggles[key] = not Toggles[key]
+        if key == "Shield" and Toggles.Shield then ForceShield() end
         Refresh() 
     end
 end)
 
 MinBtn.MouseButton1Click:Connect(function()
     IsMinimized = not IsMinimized
-    Main:TweenSize(IsMinimized and UDim2.new(0, 340, 0, 85) or UDim2.new(0, 340, 0, 680), "Out", "Quart", 0.5, true)
+    Main:TweenSize(IsMinimized and UDim2.new(0, 340, 0, 80) or UDim2.new(0, 340, 0, 680), "Out", "Quart", 0.5, true)
     Refresh()
 end)
 
