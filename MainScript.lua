@@ -46,7 +46,7 @@ local function BuildUI()
     local KTitle = Instance.new("TextLabel", KeyPanel)
     KTitle.Size = UDim2.new(1, 0, 0, 45)
     KTitle.BackgroundColor3 = theme.Secondary
-    KTitle.Text = "SKYJACK V.FINAL"
+    KTitle.Text = "SKYJACK V.1.1"
     KTitle.TextColor3 = theme.Text
     KTitle.Font = Enum.Font.GothamBold
     KTitle.TextSize = 18
