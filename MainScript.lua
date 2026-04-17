@@ -1,5 +1,5 @@
--- [[ SKYJACK OMEGA v3500: ULTIMATE MOUNT EDITION ]] --
--- Analisis: Perbaikan Stuck Verifikasi + Fitur Mount Lengkap (Video-Based)
+-- [[ SKYJACK OMEGA v3600: STRICT-REPAIR ]] --
+-- Fix: Auto Summit, Air Jump, VIP, Identity, & Background Run Logic
 repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
@@ -9,14 +9,13 @@ local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 15)
 
--- DATABASE LINK (Pastikan RAW)
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/ac789c1730c2474be917416201112f553c252218/gistfile1.txt"
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- [[ 1. UI BUILDER (MEMPERTAHANKAN STRUKTUR ASLI AGAR MUNCUL) ]] --
+-- [[ 1. UI BUILDER (MEMPERTAHANKAN STRUKTUR ASLI) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_OMEGA_V3500") then pgui.SKYJACK_OMEGA_V3500:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3600") then pgui.SKYJACK_V3600:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_OMEGA_V3500"
+    Screen.Name = "SKYJACK_V3600"
     Screen.ResetOnSpawn = false
 
     local KeyPanel = Instance.new("Frame", Screen)
@@ -29,7 +28,7 @@ local function BuildUI()
     local KTitle = Instance.new("TextLabel", KeyPanel)
     KTitle.Size = UDim2.new(1, 0, 0, 45)
     KTitle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    KTitle.Text = "LOGIN SYSTEM (8-CHAR)"
+    KTitle.Text = "LOGIN SYSTEM"
     KTitle.TextColor3 = Color3.new(1, 1, 1)
     KTitle.Font = Enum.Font.GothamBold
     Instance.new("UICorner", KTitle)
@@ -37,7 +36,7 @@ local function BuildUI()
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
     KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "Enter Key Here..."
+    KeyInput.PlaceholderText = "Enter Key..."
     KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     KeyInput.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", KeyInput)
@@ -46,7 +45,7 @@ local function BuildUI()
     CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
     CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
     CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
-    CheckBtn.Text = "VERIFY ACCESS"
+    CheckBtn.Text = "VERIFY"
     CheckBtn.TextColor3 = Color3.new(1, 1, 1)
     CheckBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", CheckBtn)
@@ -60,7 +59,7 @@ local function BuildUI()
 
     local Main = Instance.new("Frame", Screen)
     Main.Name = "MainFrame"
-    Main.Size = UDim2.new(0, 240, 0, 520)
+    Main.Size = UDim2.new(0, 240, 0, 480)
     Main.Position = UDim2.new(0.1, 0, 0.2, 0)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     Main.Visible, Main.Active, Main.Draggable = false, true, true
@@ -70,7 +69,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "MOUNT ULTIMATE v3500"
+    Title.Text = "SKYJACK REPAIR v3600"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -80,88 +79,111 @@ end
 
 local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
 
--- [[ 2. MASTER MODULES (FITUR HASIL ANALISIS VIDEO) ]] --
-local Toggles = {
-    Speed = false,      -- WalkSpeed Engine
-    AutoWalk = false,   -- Auto Summit (Video 1 & 3)
-    SafeClamp = false,  -- Anti-Clip (Cegah Nyangkut)
-    InfJump = false,    -- Air Jump
-    VipBypass = false,  -- VIP Access (Metatable Hook)
-    FakeName = false,   -- Identity Cleaner (Video 2)
-    Record = false      -- Record/Play Motion
+-- [[ 2. MASTER TOGGLES (MODUL INDEPENDEN) ]] --
+getgenv().Toggles = {
+    Speed = false,
+    AutoWalk = false,
+    InfJump = false,
+    Vip = false,
+    HideName = false,
+    Shield = false
 }
 
-local Keys = {"Speed", "AutoWalk", "SafeClamp", "InfJump", "VipBypass", "FakeName", "Record"}
-local Names = {"SPEED ENGINE (2.3)", "AUTO SUMMIT", "ANTI-CLIP CLAMP", "PHYSICAL AIR JUMP", "SYSTEM VIP BYPASS", "IDENTITY CLEANER", "MOTION RECORD"}
+local T = getgenv().Toggles
+local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
+local Names = {"SPEED (2.3)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
+local IsAuthed = false
 
--- [[ 3. VERIFIKASI ANTI-STUCK ]] --
+-- [[ 3. FIXED LOGIN LOGIC ]] --
 CheckBtn.MouseButton1Click:Connect(function()
     local input = KeyInput.Text
-    if #input ~= 8 then
-        Status.Text = "KEY HARUS 8 KARAKTER!"
-        Status.TextColor3 = Color3.new(1, 0, 0)
-        return
-    end
-
-    Status.Text = "Connecting to Server..."
-    -- Menggunakan task.spawn agar pcall tidak mengunci thread utama (Anti-Stuck)
     task.spawn(function()
-        local success, result = pcall(function() 
-            return game:HttpGet(DATABASE_URL) 
-        end)
-
-        if success and result then
-            local dataSuccess, data = pcall(function() return HttpService:JSONDecode(result) end)
-            if dataSuccess and data.KEY_LIST[input] then
-                Status.Text = "ACCESS GRANTED!"
-                Status.TextColor3 = Color3.new(0, 1, 0)
+        local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
+        if success then
+            local data = HttpService:JSONDecode(result)
+            if data.KEY_LIST[input] then
+                Status.Text = "SUCCESS!"
+                IsAuthed = true
                 task.wait(0.5)
                 KeyPanel:Destroy()
                 Main.Visible = true
             else
-                Status.Text = "INVALID OR EXPIRED KEY!"
-                Status.TextColor3 = Color3.new(1, 0, 0)
+                Status.Text = "INVALID KEY!"
             end
         else
-            Status.Text = "SERVER TIMEOUT / URL ERROR"
-            Status.TextColor3 = Color3.new(1, 0.5, 0)
+            Status.Text = "SERVER ERROR!"
         end
     end)
 end)
 
--- [[ 4. CORE ENGINE & MOVEMENT ]] --
-rs.Heartbeat:Connect(function()
-    if not Main.Visible then return end
-    local char = lp.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if not root or not hum then return end
+-- [[ 4. CORE REPAIR ENGINE (BERJALAN DI BACKGROUND) ]] --
 
-    -- Speed Engine 2.3 (Analisis Video: Optimal Speed)
-    if Toggles.Speed and hum.MoveDirection.Magnitude > 0 then
+-- VIP BYPASS & ANTI-KICK (Metatable)
+task.spawn(function()
+    pcall(function()
+        local mt = getrawmetatable(game)
+        local old = mt.__namecall
+        setreadonly(mt, false)
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if T.Shield and (method == "Kick" or method == "kick") then return nil end
+            if T.Vip and (method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset") then return true end
+            return old(self, ...)
+        end)
+        setreadonly(mt, true)
+    end)
+end)
+
+-- LOOP UTAMA (Tetap Jalan Meski UI Tutup)
+rs.Heartbeat:Connect(function()
+    if not IsAuthed then return end -- Hanya jalan jika sudah login
+    
+    local char = lp.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not hum or not root then return end
+
+    -- 1. SPEED (2.3)
+    if T.Speed and hum.MoveDirection.Magnitude > 0 then
         root.CFrame = root.CFrame + (hum.MoveDirection * 2.3)
     end
 
-    -- Auto Summit Logic
-    if Toggles.AutoWalk then
-        local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit")
-        if target then hum:MoveTo(target.Position) end
+    -- 2. AUTO SUMMIT (REPAIRED)
+    if T.AutoWalk then
+        -- Mencari target secara luas (Workspace/Map)
+        local target = workspace:FindFirstChild("Summit", true) or workspace:FindFirstChild("Checkpoint", true) or workspace:FindFirstChild("Goal", true)
+        if target and target:IsA("BasePart") then
+            hum:MoveTo(target.Position)
+        end
     end
 
-    -- Anti-Clip (Safe Clamp) 
-    if Toggles.SafeClamp and hum.MoveDirection.Magnitude > 0 then
-        local ray = workspace:Raycast(root.Position, hum.MoveDirection * 5)
-        if ray then root.Velocity = Vector3.new(0, root.Velocity.Y, 0) end
+    -- 3. IDENTITY CLEANER (REPAIRED - AGGRESSIVE)
+    if T.HideName then
+        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") or v.Name:lower():find("tag") then
+                v.Enabled = false
+            end
+        end
     end
 end)
 
--- [[ 5. UI CONTROLS ]] --
+-- 4. PHYSICAL AIR JUMP (REPAIRED)
+uis.JumpRequest:Connect(function()
+    if T.InfJump and IsAuthed then
+        local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+-- [[ 5. UI CONTROL & REFRESH ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
-        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
+        b.Text = Names[i] .. (T[k] and " [ON]" or " [OFF]")
         b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30)
     end
 end
@@ -178,13 +200,19 @@ for i = 1, #Names do
     table.insert(Buttons, b)
 end
 
+-- KEYBOARD CONTROLS (TOMBOL L HANYA UNTUK VISIBILITY)
 uis.InputBegan:Connect(function(k, g)
-    if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
+    if k.KeyCode == Enum.KeyCode.L then 
+        Main.Visible = not Main.Visible 
+    end
     if g or not Main.Visible then return end
-    if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names Refresh()
-    elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1 Refresh()
+    
+    if k.KeyCode == Enum.KeyCode.Up then 
+        Index = (Index > 1) and Index - 1 or #Names Refresh()
+    elseif k.KeyCode == Enum.KeyCode.Down then 
+        Index = (Index < #Names) and Index + 1 or 1 Refresh()
     elseif k.KeyCode == Enum.KeyCode.Return then 
-        Toggles[Keys[Index]] = not Toggles[Keys[Index]] 
+        T[Keys[Index]] = not T[Keys[Index]] 
         Refresh()
     end
 end)
