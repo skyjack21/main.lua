@@ -1,6 +1,6 @@
--- [[ SKYJACK OMEGA v3601: STABLE VELOCITY REPAIR ]] --
--- Fix by AI Research: Merombak total fitur Speed menggunakan LinearVelocity 
--- untuk mencegah tembus objek di tangga/tanjakan.
+-- [[ SKYJACK OMEGA v3602: JUMP-STUCK REPAIR ]] --
+-- Fix by AI Research: Merombak total logika LinearVelocity untuk memisahkan
+-- kecepatan horizontal dan vertikal, memperbaiki bug "stuck terbang" setelah melompat.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -15,9 +15,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3601") then pgui.SKYJACK_V3601:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3602") then pgui.SKYJACK_V3602:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3601"
+    Screen.Name = "SKYJACK_V3602"
     Screen.ResetOnSpawn = false
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
@@ -64,7 +64,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3601"
+    Title.Text = "SKYJACK REPAIR v3602"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -81,8 +81,8 @@ local Names = {"STABLE SPEED (100)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BY
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
-local TargetSpeed = 100 -- Target kecepatan stabil (default 16)
-local velocityInstance, attachmentInstance -- Variabel untuk LinearVelocity
+local TargetSpeed = 100
+local velocityInstance, attachmentInstance
 
 -- [[ 3. FIXED LOGIN LOGIC ]] --
 CheckBtn.MouseButton1Click:Connect(function()
@@ -126,15 +126,16 @@ rs.Heartbeat:Connect(function()
     if not IsAuthed then return end
     local char = lp.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
 
-    -- [CRITICAL-REWORK] Logika Speed menggunakan LinearVelocity
+    -- [CRITICAL-FIX] Logika Speed kini mempertahankan kecepatan vertikal (Y)
     if T.Speed and velocityInstance then
-        if hum.MoveDirection.Magnitude > 0 then
-            velocityInstance.VectorVelocity = hum.MoveDirection * TargetSpeed
-        else
-            velocityInstance.VectorVelocity = Vector3.new(0, 0, 0)
-        end
+        local currentYVelocity = root.AssemblyLinearVelocity.Y
+        local targetHorizontalVelocity = hum.MoveDirection * TargetSpeed
+        
+        -- Gabungkan kecepatan horizontal kustom dengan kecepatan vertikal alami
+        velocityInstance.VectorVelocity = Vector3.new(targetHorizontalVelocity.X, currentYVelocity, targetHorizontalVelocity.Z)
     end
 
     if T.AutoWalk then
@@ -192,7 +193,6 @@ uis.InputBegan:Connect(function(k, g)
         local key = Keys[Index]
         T[key] = not T[key]
         
-        -- [CRITICAL-REWORK] Logika untuk membuat/menghancurkan LinearVelocity saat Speed di-toggle
         if key == "Speed" then
             if T.Speed then
                 local char = lp.Character
