@@ -9,7 +9,7 @@ local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 15)
 
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/ac789c1730c2474be917416201112f553c252218/gistfile1.txt"
 
 -- [[ 1. UI BUILDER (MEMPERTAHANKAN STRUKTUR ASLI) ]] --
 local function BuildUI()
