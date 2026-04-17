@@ -1,6 +1,7 @@
--- [[ SKYJACK OMEGA v3602: JUMP-STUCK REPAIR ]] --
--- Fix by AI Research: Merombak total logika LinearVelocity untuk memisahkan
--- kecepatan horizontal dan vertikal, memperbaiki bug "stuck terbang" setelah melompat.
+-- [[ SKYJACK OMEGA v3603: FINAL JUMP-STUCK REPAIR ]] --
+-- Fix by AI Research: Merombak total logika LinearVelocity dengan mengatur MaxForce.Y menjadi 0.
+-- Ini secara permanen memperbaiki bug "stuck terbang" setelah melompat dengan membiarkan
+-- fisika Roblox mengontrol gravitasi sepenuhnya.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -15,9 +16,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3602") then pgui.SKYJACK_V3602:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3603") then pgui.SKYJACK_V3603:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3602"
+    Screen.Name = "SKYJACK_V3603"
     Screen.ResetOnSpawn = false
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
@@ -64,7 +65,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3602"
+    Title.Text = "SKYJACK REPAIR v3603"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -126,16 +127,14 @@ rs.Heartbeat:Connect(function()
     if not IsAuthed then return end
     local char = lp.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not hum or not root then return end
+    if not hum then return end
 
-    -- [CRITICAL-FIX] Logika Speed kini mempertahankan kecepatan vertikal (Y)
     if T.Speed and velocityInstance then
-        local currentYVelocity = root.AssemblyLinearVelocity.Y
-        local targetHorizontalVelocity = hum.MoveDirection * TargetSpeed
-        
-        -- Gabungkan kecepatan horizontal kustom dengan kecepatan vertikal alami
-        velocityInstance.VectorVelocity = Vector3.new(targetHorizontalVelocity.X, currentYVelocity, targetHorizontalVelocity.Z)
+        if hum.MoveDirection.Magnitude > 0 then
+            velocityInstance.VectorVelocity = hum.MoveDirection * TargetSpeed
+        else
+            velocityInstance.VectorVelocity = Vector3.new(0, 0, 0)
+        end
     end
 
     if T.AutoWalk then
@@ -202,7 +201,8 @@ uis.InputBegan:Connect(function(k, g)
                         attachmentInstance = Instance.new("Attachment", root)
                         velocityInstance = Instance.new("LinearVelocity", attachmentInstance)
                         velocityInstance.Attachment0 = attachmentInstance
-                        velocityInstance.MaxForce = 100000
+                        -- [CRITICAL-FIX] Atur MaxForce.Y menjadi 0 untuk membebaskan sumbu vertikal
+                        velocityInstance.MaxForce = Vector3.new(100000, 0, 100000)
                         velocityInstance.RelativeTo = Enum.ActuatorRelativeTo.World
                     end
                 end
