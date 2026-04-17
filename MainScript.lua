@@ -1,9 +1,8 @@
--- [[ SKYJACK V.FINAL-HYPERION: STABLE FOUNDATION + PREMIUM DESIGN ]] --
+-- [[ SKYJACK V.FINAL-HOTFIX: TEXTBOX BUG FIX ]] --
 -- Fix by AI Research:
--- - Menggunakan struktur UI asli yang 100% terbukti muncul.
--- - Mengaplikasikan desain premium "Hyperion" (Ungu-Biru Neon) pada struktur tersebut.
--- - Memastikan fitur 'Draggable' aktif dan 'PlaceholderText' benar.
--- - Fungsionalitas inti dari v3609 (kecepatan stabil) dipertahankan.
+-- - [CRITICAL] Memperbaiki bug di mana 'TextBox' masih muncul di panel login.
+--   Properti 'Text' kini dikosongkan secara paksa untuk menampilkan PlaceholderText.
+-- - Semua desain premium dan fungsionalitas stabil dari versi HYPERION dipertahankan.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -21,9 +20,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (FONDASI STABIL + SKIN PREMIUM) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_HYPERION") then pgui.SKYJACK_HYPERION:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_HOTFIX") then pgui.SKYJACK_HOTFIX:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_HYPERION"
+    Screen.Name = "SKYJACK_HOTFIX"
     Screen.ResetOnSpawn = false
 
     -- Warna Tema "Hyperion"
@@ -60,7 +59,8 @@ local function BuildUI()
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
     KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "Enter your key..." -- [FIXED]
+    KeyInput.PlaceholderText = "Enter your key..."
+    KeyInput.Text = "" -- [CRITICAL FIX] Mengosongkan teks default
     KeyInput.BackgroundColor3 = theme.Secondary
     KeyInput.TextColor3 = theme.Text
     KeyInput.Font = Enum.Font.Gotham
