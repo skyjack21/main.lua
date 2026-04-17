@@ -1,8 +1,7 @@
--- [[ SKYJACK V.1.2: ECLIPSE UI EDITION ]] --
--- Fix by AI Research: Merombak total desain UI dengan tema premium "Eclipse" (Dark Charcoal + Neon Cyan).
--- Memperbaiki bug di mana tombol fitur tidak muncul.
--- Mengganti nama program dan teks placeholder sesuai permintaan.
--- Fungsionalitas inti dari v3609 (kecepatan stabil) dipertahankan.
+-- [[ SKYJACK V.1.3: STABLE UI & ECLIPSE DESIGN ]] --
+-- Fix by AI Research: Memperbaiki bug kritis di mana UI tidak muncul karena kesalahan
+-- penggunaan 'AbsoluteSize'. Posisi elemen kini menggunakan 'AnchorPoint' untuk stabilitas.
+-- Desain premium "Eclipse" diimplementasikan ulang dengan kode yang andal.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -18,94 +17,109 @@ local TweenService = game:GetService("TweenService")
 local lp = Players.LocalPlayer
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/57de2421060ced152d4bbcad6a583d452dc6f9d7/gistfile1.txt"
 
--- [[ 1. PREMIUM UI BUILDER ]] --
+-- [[ 1. PREMIUM UI BUILDER (REWORKED) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V1.2") then pgui.SKYJACK_V1.2:Destroy() end
-    local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V1.2"
-    Screen.ResetOnSpawn = false
+    -- Penanganan Error untuk UI
+    local success, result = pcall(function()
+        if pgui:FindFirstChild("SKYJACK_V1.3") then pgui.SKYJACK_V1.3:Destroy() end
+        local Screen = Instance.new("ScreenGui", pgui)
+        Screen.Name = "SKYJACK_V1.3"
+        Screen.ResetOnSpawn = false
 
-    -- Warna Tema
-    local theme = {
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(28, 28, 28),
-        Accent = Color3.fromRGB(0, 255, 255),
-        Text = Color3.fromRGB(255, 255, 255),
-        MutedText = Color3.fromRGB(150, 150, 150)
-    }
+        -- Warna Tema
+        local theme = {
+            Background = Color3.fromRGB(18, 18, 18),
+            Secondary = Color3.fromRGB(28, 28, 28),
+            Accent = Color3.fromRGB(0, 255, 255),
+            Text = Color3.fromRGB(255, 255, 255),
+            MutedText = Color3.fromRGB(150, 150, 150)
+        }
 
-    -- PANEL LOGIN
-    local KeyPanel = Instance.new("Frame", Screen)
-    KeyPanel.Size = UDim2.new(0, 350, 0, 230)
-    KeyPanel.Position = UDim2.new(0.5, -175, 0.5, -115)
-    KeyPanel.BackgroundColor3 = theme.Background
-    KeyPanel.BorderSizePixel = 0
-    Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", KeyPanel).Color = theme.Accent
+        -- PANEL LOGIN
+        local KeyPanel = Instance.new("Frame", Screen)
+        KeyPanel.Size = UDim2.new(0, 350, 0, 230)
+        KeyPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+        KeyPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
+        KeyPanel.BackgroundColor3 = theme.Background
+        KeyPanel.BorderSizePixel = 0
+        Instance.new("UICorner", KeyPanel).CornerRadius = UDim.new(0, 6)
+        Instance.new("UIStroke", KeyPanel).Color = theme.Accent
 
-    local KTitle = Instance.new("TextLabel", KeyPanel)
-    KTitle.Size = UDim2.new(1, 0, 0, 45)
-    KTitle.BackgroundColor3 = theme.Secondary
-    KTitle.Text = "SKYJACK V.1.2"
-    KTitle.TextColor3 = theme.Text
-    KTitle.Font = Enum.Font.GothamBold
-    KTitle.TextSize = 18
-    Instance.new("UICorner", KTitle).CornerRadius = UDim.new(0, 6)
+        local KTitle = Instance.new("TextLabel", KeyPanel)
+        KTitle.Size = UDim2.new(1, 0, 0, 45)
+        KTitle.BackgroundColor3 = theme.Secondary
+        KTitle.Text = "SKYJACK V.1.3"
+        KTitle.TextColor3 = theme.Text
+        KTitle.Font = Enum.Font.GothamBold
+        KTitle.TextSize = 18
+        Instance.new("UICorner", KTitle).CornerRadius = UDim.new(0, 6)
 
-    local KeyInput = Instance.new("TextBox", KeyPanel)
-    KeyInput.Size = UDim2.new(1, -40, 0, 45)
-    KeyInput.Position = UDim2.new(0.5, -KeyInput.AbsoluteSize.X/2, 0, 75)
-    KeyInput.PlaceholderText = "Enter your key" -- Teks diperbaiki
-    KeyInput.ClearTextOnFocus = false
-    KeyInput.BackgroundColor3 = theme.Secondary
-    KeyInput.TextColor3 = theme.Text
-    KeyInput.Font = Enum.Font.Gotham
-    KeyInput.TextSize = 14
-    Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 4)
+        local KeyInput = Instance.new("TextBox", KeyPanel)
+        KeyInput.Size = UDim2.new(1, -40, 0, 45)
+        KeyInput.AnchorPoint = Vector2.new(0.5, 0)
+        KeyInput.Position = UDim2.new(0.5, 0, 0, 75)
+        KeyInput.PlaceholderText = "Enter your key"
+        KeyInput.ClearTextOnFocus = false
+        KeyInput.BackgroundColor3 = theme.Secondary
+        KeyInput.TextColor3 = theme.Text
+        KeyInput.Font = Enum.Font.Gotham
+        KeyInput.TextSize = 14
+        Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 4)
 
-    local CheckBtn = Instance.new("TextButton", KeyPanel)
-    CheckBtn.Size = UDim2.new(1, -40, 0, 45)
-    CheckBtn.Position = UDim2.new(0.5, -CheckBtn.AbsoluteSize.X/2, 0, 135)
-    CheckBtn.BackgroundColor3 = theme.Accent
-    CheckBtn.Text = "AUTHENTICATE"
-    CheckBtn.TextColor3 = theme.Background
-    CheckBtn.Font = Enum.Font.GothamBold
-    CheckBtn.TextSize = 16
-    Instance.new("UICorner", CheckBtn).CornerRadius = UDim.new(0, 4)
+        local CheckBtn = Instance.new("TextButton", KeyPanel)
+        CheckBtn.Size = UDim2.new(1, -40, 0, 45)
+        CheckBtn.AnchorPoint = Vector2.new(0.5, 0)
+        CheckBtn.Position = UDim2.new(0.5, 0, 0, 135)
+        CheckBtn.BackgroundColor3 = theme.Accent
+        CheckBtn.Text = "AUTHENTICATE"
+        CheckBtn.TextColor3 = theme.Background
+        CheckBtn.Font = Enum.Font.GothamBold
+        CheckBtn.TextSize = 16
+        Instance.new("UICorner", CheckBtn).CornerRadius = UDim.new(0, 4)
 
-    local Status = Instance.new("TextLabel", KeyPanel)
-    Status.Size = UDim2.new(1, -40, 0, 30)
-    Status.Position = UDim2.new(0.5, -Status.AbsoluteSize.X/2, 0, 190)
-    Status.BackgroundTransparency = 1
-    Status.Text = "Awaiting authentication..."
-    Status.TextColor3 = theme.MutedText
-    Status.Font = Enum.Font.Gotham
-    Status.TextSize = 12
+        local Status = Instance.new("TextLabel", KeyPanel)
+        Status.Size = UDim2.new(1, -40, 0, 30)
+        Status.AnchorPoint = Vector2.new(0.5, 0)
+        Status.Position = UDim2.new(0.5, 0, 0, 190)
+        Status.BackgroundTransparency = 1
+        Status.Text = "Awaiting authentication..."
+        Status.TextColor3 = theme.MutedText
+        Status.Font = Enum.Font.Gotham
+        Status.TextSize = 12
 
-    -- PANEL CHEAT UTAMA
-    local Main = Instance.new("Frame", Screen)
-    Main.Name = "MainFrame"
-    Main.Size = UDim2.new(0, 280, 0, 500)
-    Main.Position = UDim2.new(0.05, 0, 0.5, -250)
-    Main.BackgroundColor3 = theme.Background
-    Main.Visible = false
-    Main.BorderSizePixel = 0
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", Main).Color = theme.Accent
+        -- PANEL CHEAT UTAMA
+        local Main = Instance.new("Frame", Screen)
+        Main.Name = "MainFrame"
+        Main.Size = UDim2.new(0, 280, 0, 500)
+        Main.AnchorPoint = Vector2.new(0, 0.5)
+        Main.Position = UDim2.new(0.05, 0, 0.5, 0)
+        Main.BackgroundColor3 = theme.Background
+        Main.Visible = false
+        Main.BorderSizePixel = 0
+        Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+        Instance.new("UIStroke", Main).Color = theme.Accent
 
-    local Title = Instance.new("TextLabel", Main)
-    Title.Size = UDim2.new(1, 0, 0, 50)
-    Title.BackgroundColor3 = theme.Secondary
-    Title.Text = "SKYJACK V.1.2"
-    Title.TextColor3 = theme.Text
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 20
-    Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 6)
+        local Title = Instance.new("TextLabel", Main)
+        Title.Size = UDim2.new(1, 0, 0, 50)
+        Title.BackgroundColor3 = theme.Secondary
+        Title.Text = "SKYJACK V.1.3"
+        Title.TextColor3 = theme.Text
+        Title.Font = Enum.Font.GothamBold
+        Title.TextSize = 20
+        Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 6)
 
-    return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status, theme
+        return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status, theme
+    end)
+    
+    if not success then
+        warn("SKYJACK UI ERROR:", result)
+        return
+    end
+    return unpack(result)
 end
 
 local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status, theme = BuildUI()
+if not Screen then return end -- Hentikan skrip jika UI gagal dibuat
 
 -- [[ 2. MASTER TOGGLES & CONFIG ]] --
 getgenv().Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
@@ -222,7 +236,8 @@ end
 for i = 1, #Names do
     local b = Instance.new("TextButton", Main)
     b.Size = UDim2.new(1, -30, 0, 60)
-    b.Position = UDim2.new(0.5, -b.AbsoluteSize.X/2, 0, (i * 70))
+    b.AnchorPoint = Vector2.new(0.5, 0)
+    b.Position = UDim2.new(0.5, 0, 0, (i * 70))
     b.BackgroundColor3 = theme.Background
     b.Font = Enum.Font.GothamSemibold
     b.TextColor3 = theme.MutedText
