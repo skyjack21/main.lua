@@ -1,12 +1,11 @@
 --[[
-    OMNI v145: MOUNT INDEPENDENCE - COMPREHENSIVE EDITION
+    OMNI v146: MOUNT INDEPENDENCE - INTELLIGENT SPEED FIX
     
     Perbaikan oleh AI Research:
-    - [CRITICAL] Speed Engine dirombak total menggunakan VectorForce untuk kecepatan tinggi yang stabil dan tidak menembus objek.
-    - [RESTORED] Fitur VIP Bypass & Anti-Ban dikembalikan dengan hook __namecall yang dibungkus newcclosure untuk keamanan maksimal.
-    - [ENHANCED] Fitur Hide Nickname (Fake Name) distabilkan dengan logika yang lebih andal.
-    - [KEPT] Fitur Air Jump dipertahankan.
-    - Struktur kode disempurnakan untuk performa dan kejelasan.
+    - [CRITICAL FIX] Speed Engine tidak lagi 'auto-run'. Gaya dorong kini hanya aktif saat pemain menekan tombol gerak (W,A,S,D).
+    - [ENHANCED] Arah dorongan Speed kini mengikuti arah gerakan pemain, bukan arah kamera, membuatnya lebih intuitif.
+    - [STABILITY] Logika pembuatan dan penghancuran VectorForce disempurnakan agar lebih bersih dan andal.
+    - Semua fitur lain dari v145 dipertahankan.
 ]]
 
 -- Layanan-layanan utama
@@ -21,7 +20,7 @@ local pgui = lp:WaitForChild("PlayerGui", 15)
 -- Konfigurasi Fitur
 local Toggles = {Speed = false, InfJump = false, VIP = false, FakeName = false, AntiBan = false}
 local Keys = {"Speed", "InfJump", "VIP", "FakeName", "AntiBan"}
-local Names = {"STABLE SPEED (Vector)", "AIR JUMP", "VIP BYPASS", "HIDE NICKNAME", "ANTI-KICK SHIELD"}
+local Names = {"INTELLIGENT SPEED", "AIR JUMP", "VIP BYPASS", "HIDE NICKNAME", "ANTI-KICK SHIELD"}
 local Buttons = {}
 local Index = 1
 local SpeedForce = 50000 -- Kekuatan dorongan untuk speed, bisa disesuaikan
@@ -32,9 +31,9 @@ local speedAttachment = nil
 
 -- [[ 1. UI BUILDER ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("OMNI_SECURE_V145") then pgui.OMNI_SECURE_V145:Destroy() end
+    if pgui:FindFirstChild("OMNI_SECURE_V146") then pgui.OMNI_SECURE_V146:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "OMNI_SECURE_V145"
+    Screen.Name = "OMNI_SECURE_V146"
     Screen.ResetOnSpawn = false
 
     local Main = Instance.new("Frame", Screen)
@@ -49,7 +48,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "MOUNT INDEPENDENCE v145"
+    Title.Text = "MOUNT INDEPENDENCE v146"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -62,35 +61,20 @@ local Main = BuildUI()
 -- [[ 2. FUNGSI-FUNGSI FITUR ]] --
 local function InitializeFeatures()
 
-    -- [NEW] Logika Speed Engine dengan VectorForce
-    local function updateSpeed()
-        local char = lp.Character
-        if not char then return end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        
-        if Toggles.Speed and root then
-            if not speedForceInstance then
-                speedAttachment = Instance.new("Attachment", root)
-                speedForceInstance = Instance.new("VectorForce", speedAttachment)
-                speedForceInstance.RelativeTo = Enum.ActuatorRelativeTo.World
-                speedForceInstance.Attachment0 = speedAttachment
-            end
-            local camDirection = workspace.CurrentCamera.CFrame.LookVector
-            speedForceInstance.Force = Vector3.new(camDirection.X, 0, camDirection.Z).Unit * SpeedForce
-        else
-            if speedForceInstance then
-                speedForceInstance:Destroy()
-                speedAttachment:Destroy()
-                speedForceInstance = nil
-                speedAttachment = nil
-            end
-        end
-    end
-
-    -- Loop utama untuk fitur yang butuh update konstan
+    -- [CRITICAL FIX] Loop Heartbeat kini memeriksa input pemain sebelum menerapkan gaya
     RunService.Heartbeat:Connect(function()
-        if Toggles.Speed then
-            updateSpeed()
+        local char = lp.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        if not hum then return end
+
+        if Toggles.Speed and speedForceInstance then
+            -- Hanya terapkan gaya jika pemain sedang bergerak
+            if hum.MoveDirection.Magnitude > 0 then
+                speedForceInstance.Force = hum.MoveDirection * SpeedForce
+            else
+                -- Jika pemain diam, jangan berikan gaya
+                speedForceInstance.Force = Vector3.new(0, 0, 0)
+            end
         end
     end)
 
@@ -111,7 +95,7 @@ local function InitializeFeatures()
     if lp.Character then updateNameVisibility(lp.Character) end
     lp.CharacterAdded:Connect(updateNameVisibility)
 
-    -- [RESTORED] Fitur Bypass dengan keamanan tambahan
+    -- Fitur Bypass dengan keamanan tambahan
     local function SetupBypasses()
         if not getrawmetatable or not newcclosure then 
             warn("OMNI: Executor tidak mendukung fungsi bypass. Fitur VIP/Anti-Kick tidak akan aktif.")
@@ -165,7 +149,29 @@ local function InitializeFeatures()
             Toggles[key] = not Toggles[key]
             
             if key == "FakeName" then updateNameVisibility(lp.Character) end
-            if key == "Speed" then updateSpeed() end -- Panggil update saat speed di-toggle
+            
+            -- [CRITICAL FIX] Logika untuk membuat/menghancurkan VectorForce saat di-toggle
+            if key == "Speed" then
+                if Toggles.Speed then
+                    local char = lp.Character
+                    if char and not speedForceInstance then
+                        local root = char:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            speedAttachment = Instance.new("Attachment", root)
+                            speedForceInstance = Instance.new("VectorForce", speedAttachment)
+                            speedForceInstance.RelativeTo = Enum.ActuatorRelativeTo.World
+                            speedForceInstance.Attachment0 = speedAttachment
+                        end
+                    end
+                else
+                    if speedForceInstance then
+                        speedForceInstance:Destroy()
+                        speedAttachment:Destroy()
+                        speedForceInstance = nil
+                        speedAttachment = nil
+                    end
+                end
+            end
         end
         Refresh()
     end)
@@ -174,4 +180,4 @@ end
 
 -- [[ 3. INISIALISASI ]] --
 InitializeFeatures()
-print("OMNI v145 (Comprehensive Edition) Berhasil Dimuat!")
+print("OMNI v146 (Intelligent Speed Fix) Berhasil Dimuat!")
