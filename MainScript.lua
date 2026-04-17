@@ -1,5 +1,7 @@
--- [[ SKYJACK OMEGA v3604: SPEED ADJUSTMENT ]] --
--- Fix by AI Research: Kecepatan disesuaikan menjadi 1.9x (30.4) sesuai permintaan.
+-- [[ SKYJACK OMEGA v3605: ULTRA SPEED EDITION ]] --
+-- Fix by AI Research: TargetSpeed ditingkatkan secara drastis ke 120 untuk "runner time".
+-- Metode LinearVelocity dengan MaxForce.Y = 0 dipertahankan untuk stabilitas maksimal,
+-- mencegah tembus objek bahkan pada kecepatan sangat tinggi.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -14,9 +16,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3604") then pgui.SKYJACK_V3604:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3605") then pgui.SKYJACK_V3605:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3604"
+    Screen.Name = "SKYJACK_V3605"
     Screen.ResetOnSpawn = false
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
@@ -63,7 +65,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3604"
+    Title.Text = "SKYJACK REPAIR v3605"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -77,12 +79,12 @@ getgenv().Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = fal
 local T = getgenv().Toggles
 local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
 -- [ADJUSTED] Teks UI diubah
-local Names = {"SPEED (1.9x)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
+local Names = {"ULTRA SPEED (120)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
--- [ADJUSTED] Kecepatan diubah ke 1.9x dari kecepatan default (16)
-local TargetSpeed = 30.4 
+-- [CRITICAL-ADJUSTMENT] Kecepatan ditingkatkan secara drastis
+local TargetSpeed = 120 
 local velocityInstance, attachmentInstance
 
 -- [[ 3. FIXED LOGIN LOGIC ]] --
