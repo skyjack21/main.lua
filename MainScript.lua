@@ -1,7 +1,7 @@
--- [[ SKYJACK OMEGA v3606: MAX-FORCE REPAIR ]] --
--- Fix by AI Research: MaxForce pada LinearVelocity diubah menjadi 'math.huge'
--- untuk memberikan kekuatan tak terbatas, menjamin kecepatan berubah secara signifikan.
--- TargetSpeed juga ditingkatkan ke 150 untuk 'runner time'.
+-- [[ SKYJACK OMEGA v3609: ANTI-CLIP REPAIR ]] --
+-- Fix by AI Research: Mengembalikan metode speed CFrame yang cepat dan menambahkan
+-- Raycast sebagai "rem darurat" untuk mencegah tembus objek di tangga/tanjakan.
+-- Ini adalah solusi hybrid untuk kecepatan dan stabilitas.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -16,9 +16,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3606") then pgui.SKYJACK_V3606:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3609") then pgui.SKYJACK_V3609:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3606"
+    Screen.Name = "SKYJACK_V3609"
     Screen.ResetOnSpawn = false
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
@@ -65,7 +65,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3606"
+    Title.Text = "SKYJACK REPAIR v3609"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -78,12 +78,12 @@ local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
 getgenv().Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
 local T = getgenv().Toggles
 local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
-local Names = {"MAX-FORCE SPEED (150)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
+local Names = {"ANTI-CLIP SPEED (2.5)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
-local TargetSpeed = 150 
-local velocityInstance, attachmentInstance
+local SpeedMultiplier = 2.5 -- Kecepatan CFrame
+local raycastParams = RaycastParams.new() -- Params untuk Raycast
 
 -- [[ 3. FIXED LOGIN LOGIC ]] --
 CheckBtn.MouseButton1Click:Connect(function()
@@ -130,10 +130,19 @@ rs.Heartbeat:Connect(function()
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not hum or not root then return end
 
-    if T.Speed and velocityInstance then
-        local currentYVelocity = root.AssemblyLinearVelocity.Y
-        local targetHorizontalVelocity = hum.MoveDirection * TargetSpeed
-        velocityInstance.VectorVelocity = Vector3.new(targetHorizontalVelocity.X, currentYVelocity, targetHorizontalVelocity.Z)
+    -- [CRITICAL-FIX] Logika Speed CFrame dengan pengaman Raycast
+    if T.Speed and hum.MoveDirection.Magnitude > 0 then
+        raycastParams.FilterDescendantsInstances = {char} -- Abaikan karakter sendiri
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+        
+        local origin = root.Position
+        local direction = hum.MoveDirection * (SpeedMultiplier + 1) -- Ray sedikit lebih panjang dari gerakan
+        local result = workspace:Raycast(origin, direction, raycastParams)
+        
+        -- Hanya bergerak jika tidak ada halangan di depan
+        if not result then
+            root.CFrame = root.CFrame + (hum.MoveDirection * SpeedMultiplier)
+        end
     end
 
     if T.AutoWalk then
@@ -182,7 +191,7 @@ for i = 1, #Names do
 end
 
 uis.InputBegan:Connect(function(k, g)
-    if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
+    if k.KeyCode == Enum.KeyCode.L and IsAuthed then Main.Visible = not Main.Visible end
     if g or not Main.Visible then return end
     
     if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names
@@ -190,30 +199,6 @@ uis.InputBegan:Connect(function(k, g)
     elseif k.KeyCode == Enum.KeyCode.Return then
         local key = Keys[Index]
         T[key] = not T[key]
-        
-        if key == "Speed" then
-            if T.Speed then
-                local char = lp.Character
-                if char and not velocityInstance then
-                    local root = char:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        attachmentInstance = Instance.new("Attachment", root)
-                        velocityInstance = Instance.new("LinearVelocity", attachmentInstance)
-                        velocityInstance.Attachment0 = attachmentInstance
-                        -- [CRITICAL-FIX] Atur MaxForce ke 'math.huge' untuk kekuatan tak terbatas
-                        velocityInstance.MaxForce = Vector3.new(math.huge, 0, math.huge)
-                        velocityInstance.RelativeTo = Enum.ActuatorRelativeTo.World
-                    end
-                end
-            else
-                if velocityInstance then
-                    velocityInstance:Destroy()
-                    attachmentInstance:Destroy()
-                    velocityInstance = nil
-                    attachmentInstance = nil
-                end
-            end
-        end
     end
     Refresh()
 end)
