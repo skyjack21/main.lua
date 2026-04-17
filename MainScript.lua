@@ -1,7 +1,5 @@
--- [[ SKYJACK OMEGA v3603: FINAL JUMP-STUCK REPAIR ]] --
--- Fix by AI Research: Merombak total logika LinearVelocity dengan mengatur MaxForce.Y menjadi 0.
--- Ini secara permanen memperbaiki bug "stuck terbang" setelah melompat dengan membiarkan
--- fisika Roblox mengontrol gravitasi sepenuhnya.
+-- [[ SKYJACK OMEGA v3604: SPEED ADJUSTMENT ]] --
+-- Fix by AI Research: Kecepatan disesuaikan menjadi 1.9x (30.4) sesuai permintaan.
 
 repeat task.wait() until game:IsLoaded()
 
@@ -16,9 +14,9 @@ local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba
 
 -- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3603") then pgui.SKYJACK_V3603:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3604") then pgui.SKYJACK_V3604:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3603"
+    Screen.Name = "SKYJACK_V3604"
     Screen.ResetOnSpawn = false
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
@@ -65,7 +63,7 @@ local function BuildUI()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3603"
+    Title.Text = "SKYJACK REPAIR v3604"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
@@ -78,11 +76,13 @@ local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
 getgenv().Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
 local T = getgenv().Toggles
 local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
-local Names = {"STABLE SPEED (100)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
+-- [ADJUSTED] Teks UI diubah
+local Names = {"SPEED (1.9x)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
-local TargetSpeed = 100
+-- [ADJUSTED] Kecepatan diubah ke 1.9x dari kecepatan default (16)
+local TargetSpeed = 30.4 
 local velocityInstance, attachmentInstance
 
 -- [[ 3. FIXED LOGIN LOGIC ]] --
@@ -127,14 +127,13 @@ rs.Heartbeat:Connect(function()
     if not IsAuthed then return end
     local char = lp.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
 
     if T.Speed and velocityInstance then
-        if hum.MoveDirection.Magnitude > 0 then
-            velocityInstance.VectorVelocity = hum.MoveDirection * TargetSpeed
-        else
-            velocityInstance.VectorVelocity = Vector3.new(0, 0, 0)
-        end
+        local currentYVelocity = root.AssemblyLinearVelocity.Y
+        local targetHorizontalVelocity = hum.MoveDirection * TargetSpeed
+        velocityInstance.VectorVelocity = Vector3.new(targetHorizontalVelocity.X, currentYVelocity, targetHorizontalVelocity.Z)
     end
 
     if T.AutoWalk then
@@ -201,7 +200,6 @@ uis.InputBegan:Connect(function(k, g)
                         attachmentInstance = Instance.new("Attachment", root)
                         velocityInstance = Instance.new("LinearVelocity", attachmentInstance)
                         velocityInstance.Attachment0 = attachmentInstance
-                        -- [CRITICAL-FIX] Atur MaxForce.Y menjadi 0 untuk membebaskan sumbu vertikal
                         velocityInstance.MaxForce = Vector3.new(100000, 0, 100000)
                         velocityInstance.RelativeTo = Enum.ActuatorRelativeTo.World
                     end
