@@ -1,8 +1,9 @@
--- [[ SKYJACK V.1.4: SAFEST & LIGHTEST EDITION ]] --
--- Fix by AI Research: Menghilangkan semua elemen yang berpotensi menyebabkan konflik
--- dengan executor yang tidak stabil, termasuk getgenv. Ini adalah upaya terakhir.
+-- [[ SKYJACK V.FINAL: STABLE & FUNCTIONAL EDITION ]] --
+-- Fix by AI Research: Kembali ke struktur UI asli yang terbukti berfungsi untuk
+-- memperbaiki masalah UI tidak muncul. Menggabungkan logika fitur terbaik (CFrame + Raycast)
+-- dari versi sebelumnya untuk kecepatan dan stabilitas maksimal.
 
-repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
+repeat task.wait() until game:IsLoaded()
 
 -- Layanan
 local Players = game:GetService("Players")
@@ -15,18 +16,14 @@ local pgui = Players.LocalPlayer:WaitForChild("PlayerGui", 15)
 local lp = Players.LocalPlayer
 local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/57de2421060ced152d4bbcad6a583d452dc6f9d7/gistfile1.txt"
 
--- Variabel Lokal untuk Pengganti getgenv()
-local Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
-
--- [[ 1. UI BUILDER ]] --
-local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
-pcall(function()
-    if pgui:FindFirstChild("SKYJACK_V1.4") then pgui.SKYJACK_V1.4:Destroy() end
-    Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V1.4"
+-- [[ 1. UI BUILDER (KEMBALI KE STRUKTUR ASLI YANG STABIL) ]] --
+local function BuildUI()
+    if pgui:FindFirstChild("SKYJACK_FINAL") then pgui.SKYJACK_FINAL:Destroy() end
+    local Screen = Instance.new("ScreenGui", pgui)
+    Screen.Name = "SKYJACK_FINAL"
     Screen.ResetOnSpawn = false
-    
-    KeyPanel = Instance.new("Frame", Screen)
+
+    local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
     KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0)
     KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
@@ -41,7 +38,7 @@ pcall(function()
     KTitle.Font = Enum.Font.GothamBold
     Instance.new("UICorner", KTitle)
 
-    KeyInput = Instance.new("TextBox", KeyPanel)
+    local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
     KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
     KeyInput.PlaceholderText = "Enter Key..."
@@ -49,7 +46,7 @@ pcall(function()
     KeyInput.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", KeyInput)
 
-    CheckBtn = Instance.new("TextButton", KeyPanel)
+    local CheckBtn = Instance.new("TextButton", KeyPanel)
     CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
     CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
     CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
@@ -58,14 +55,14 @@ pcall(function()
     CheckBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", CheckBtn)
 
-    Status = Instance.new("TextLabel", KeyPanel)
+    local Status = Instance.new("TextLabel", KeyPanel)
     Status.Size = UDim2.new(1, 0, 0, 30)
     Status.Position = UDim2.new(0, 0, 0.85, 0)
     Status.BackgroundTransparency = 1
     Status.Text = "Awaiting Key..."
     Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 
-    Main = Instance.new("Frame", Screen)
+    local Main = Instance.new("Frame", Screen)
     Main.Name = "MainFrame"
     Main.Size = UDim2.new(0, 240, 0, 480)
     Main.Position = UDim2.new(0.1, 0, 0.2, 0)
@@ -77,15 +74,20 @@ pcall(function()
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK V.1.4"
+    Title.Text = "SKYJACK V.FINAL"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
-end)
+
+    return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
+end
+
+local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
 
 -- [[ 2. MASTER TOGGLES & CONFIG ]] --
+local Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
 local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
-local Names = {"ANTI-CLIP SPEED", "AUTO SUMMIT", "AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
+local Names = {"ANTI-CLIP SPEED (2.5)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
@@ -93,28 +95,27 @@ local SpeedMultiplier = 2.5
 local raycastParams = RaycastParams.new()
 
 -- [[ 3. FIXED LOGIN LOGIC ]] --
-if CheckBtn then
-    CheckBtn.MouseButton1Click:Connect(function()
-        local input = KeyInput.Text
-        task.spawn(function()
-            local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
-            if success then
-                local data = HttpService:JSONDecode(result)
-                if data.KEY_LIST[input] then
-                    Status.Text = "SUCCESS!"
-                    IsAuthed = true
-                    task.wait(0.5)
-                    KeyPanel:Destroy()
-                    Main.Visible = true
-                else
-                    Status.Text = "INVALID KEY!"
-                end
+CheckBtn.MouseButton1Click:Connect(function()
+    local input = KeyInput.Text
+    Status.Text = "Verifying..."
+    task.spawn(function()
+        local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
+        if success then
+            local data = HttpService:JSONDecode(result)
+            if data.KEY_LIST[input] then
+                Status.Text = "SUCCESS!"
+                IsAuthed = true
+                task.wait(0.5)
+                KeyPanel:Destroy()
+                Main.Visible = true
             else
-                Status.Text = "SERVER ERROR!"
+                Status.Text = "INVALID KEY!"
             end
-        end)
+        else
+            Status.Text = "SERVER ERROR!"
+        end
     end)
-end
+end)
 
 -- [[ 4. CORE REPAIR ENGINE ]] --
 task.spawn(function()
@@ -177,39 +178,37 @@ uis.JumpRequest:Connect(function()
 end)
 
 -- [[ 5. UI CONTROL & REFRESH ]] --
-if Main then
-    local function Refresh()
-        for i, b in ipairs(Buttons) do
-            local k = Keys[i]
-            b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
-            b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30)
-        end
+local function Refresh()
+    for i, b in ipairs(Buttons) do
+        local k = Keys[i]
+        b.Text = Names[i] .. (Toggles[k] and " [ON]" or " [OFF]")
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(25, 25, 30)
     end
-
-    for i = 1, #Names do
-        local b = Instance.new("TextButton", Main)
-        b.Size = UDim2.new(1, -20, 0, 60)
-        b.Position = UDim2.new(0, 10, 0, (i * 68) - 20)
-        b.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-        b.Font = Enum.Font.GothamBold
-        b.TextColor3 = Color3.new(1, 1, 1)
-        b.TextSize = 10
-        Instance.new("UICorner", b)
-        table.insert(Buttons, b)
-    end
-
-    uis.InputBegan:Connect(function(k, g)
-        if k.KeyCode == Enum.KeyCode.L and IsAuthed then Main.Visible = not Main.Visible end
-        if g or not Main.Visible then return end
-        
-        if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names
-        elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1
-        elseif k.KeyCode == Enum.KeyCode.Return then
-            local key = Keys[Index]
-            Toggles[key] = not Toggles[key]
-        end
-        Refresh()
-    end)
-
-    Refresh()
 end
+
+for i = 1, #Names do
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(1, -20, 0, 60)
+    b.Position = UDim2.new(0, 10, 0, (i * 68) - 20)
+    b.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    b.Font = Enum.Font.GothamBold
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.TextSize = 10
+    Instance.new("UICorner", b)
+    table.insert(Buttons, b)
+end
+
+uis.InputBegan:Connect(function(k, g)
+    if k.KeyCode == Enum.KeyCode.L and IsAuthed then Main.Visible = not Main.Visible end
+    if g or not Main.Visible then return end
+    
+    if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names
+    elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1
+    elseif k.KeyCode == Enum.KeyCode.Return then
+        local key = Keys[Index]
+        Toggles[key] = not Toggles[key]
+    end
+    Refresh()
+end)
+
+Refresh()
