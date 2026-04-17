@@ -1,25 +1,20 @@
 --[[
-    OMNI v142: MOUNT INDEPENDENCE - KEY VERIFICATION FIX
+    OMNI v143: MOUNT INDEPENDENCE - NO-KEY EDITION
     
     Perbaikan oleh AI Research:
-    - [CRITICAL FIX] Proses verifikasi kunci kini sepenuhnya dibungkus pcall untuk mencegah 'stuck'.
-    - [ADDED] Pesan status UI kini lebih detail jika terjadi error (mis. format JSON salah).
-    - [ADDED] Validasi tambahan untuk memastikan format tanggal di Gist benar.
-    - Semua perbaikan dari v141 tetap dipertahankan.
+    - [CRITICAL] Sistem verifikasi kunci dihapus sepenuhnya untuk mengatasi error 'Can't parse JSON'.
+    - Skrip kini langsung aktif tanpa perlu login.
+    - Semua fitur dari v141 (Anti-Ban, VIP, Speed, dll.) sudah terimplementasi dan aktif.
 ]]
 
 -- Layanan-layanan utama
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 -- Variabel pemain lokal
 local lp = Players.LocalPlayer
 local pgui = lp:WaitForChild("PlayerGui", 15)
-
--- GANTI DENGAN LINK RAW GIST keys.json KAMU
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/8962e5cc759e935524a8425c0c1e6cb67714c81e/gistfile1.txt" 
 
 -- Konfigurasi Fitur
 local Toggles = {Speed = false, InfJump = false, VIP = false, FakeName = false, AntiBan = false}
@@ -28,77 +23,35 @@ local Names = {"SPEED ENGINE (1.8x)", "AIR JUMP", "VIP BYPASS", "SERVER FAKE NAM
 local Buttons = {}
 local Index, SpeedMult = 1, 1.8
 
--- [[ 1. UI BUILDER (LOGIN & CHEAT PANELS) ]] --
+-- [[ 1. UI BUILDER ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("OMNI_SECURE_V142") then pgui.OMNI_SECURE_V142:Destroy() end
+    if pgui:FindFirstChild("OMNI_SECURE_V143") then pgui.OMNI_SECURE_V143:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "OMNI_SECURE_V142"
+    Screen.Name = "OMNI_SECURE_V143"
     Screen.ResetOnSpawn = false
 
-    -- PANEL LOGIN
-    local KeyPanel = Instance.new("Frame", Screen)
-    KeyPanel.Size = UDim2.new(0, 320, 0, 240)
-    KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    KeyPanel.Active, KeyPanel.Draggable = true, true
-    Instance.new("UICorner", KeyPanel)
-
-    local KTitle = Instance.new("TextLabel", KeyPanel)
-    KTitle.Size = UDim2.new(1, 0, 0, 45)
-    KTitle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    KTitle.Text = "LOGIN SYSTEM (8-CHAR)"
-    KTitle.TextColor3 = Color3.new(1, 1, 1)
-    KTitle.Font = Enum.Font.GothamBold
-    Instance.new("UICorner", KTitle)
-
-    local KeyInput = Instance.new("TextBox", KeyPanel)
-    KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
-    KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
-    KeyInput.PlaceholderText = "Enter Key Here..."
-    KeyInput.Text = ""
-    KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    KeyInput.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", KeyInput)
-
-    local CheckBtn = Instance.new("TextButton", KeyPanel)
-    CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
-    CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
-    CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
-    CheckBtn.Text = "CHECK KEY"
-    CheckBtn.TextColor3 = Color3.new(1, 1, 1)
-    CheckBtn.Font = Enum.Font.GothamBold
-    Instance.new("UICorner", CheckBtn)
-
-    local Status = Instance.new("TextLabel", KeyPanel)
-    Status.Size = UDim2.new(1, 0, 0, 30)
-    Status.Position = UDim2.new(0, 0, 0.85, 0)
-    Status.BackgroundTransparency = 1
-    Status.Text = "Awaiting Key..."
-    Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-    Status.Font = Enum.Font.Gotham
-
-    -- PANEL CHEAT UTAMA
+    -- PANEL CHEAT UTAMA (Langsung terlihat)
     local Main = Instance.new("Frame", Screen)
     Main.Name = "MainFrame"
     Main.Size = UDim2.new(0, 240, 0, 440)
     Main.Position = UDim2.new(0.1, 0, 0.2, 0)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    Main.Visible, Main.Active, Main.Draggable = false, true, true
+    Main.Visible, Main.Active, Main.Draggable = true, true, true -- Langsung terlihat
     Instance.new("UICorner", Main)
     Instance.new("UIStroke", Main).Color = Color3.fromRGB(200, 0, 0)
 
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "MOUNT INDEPENDENCE v142"
+    Title.Text = "MOUNT INDEPENDENCE v143"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
 
-    return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
+    return Main
 end
 
-local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
+local Main = BuildUI()
 
 -- [[ 2. FUNGSI-FUNGSI FITUR ]] --
 local function InitializeFeatures()
@@ -176,57 +129,7 @@ local function InitializeFeatures()
     Refresh()
 end
 
--- [[ 3. CLOUD KEY VALIDATION (REVISED) ]] --
-CheckBtn.MouseButton1Click:Connect(function()
-    local input = KeyInput.Text
-    if #input ~= 8 then
-        Status.Text = "KEY HARUS 8 KARAKTER!"
-        Status.TextColor3 = Color3.new(1, 0, 0)
-        return
-    end
-
-    Status.Text = "Verifying with Server..."
-    Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-
-    -- [CRITICAL FIX] pcall kini membungkus seluruh proses
-    local success, result = pcall(function()
-        local rawData = game:HttpGet(DATABASE_URL)
-        local data = HttpService:JSONDecode(rawData)
-        
-        if not data or not data.KEY_LIST then
-            error("FORMAT JSON SALAH / KEY_LIST TIDAK ADA")
-        end
-
-        local keyData = data.KEY_LIST[input]
-        if not keyData then
-            error("KEY TIDAK DITEMUKAN DI DATABASE")
-        end
-
-        local yr, mo, dy = keyData.Exp:match("(%d+)-(%d+)-(%d+)")
-        if not (yr and mo and dy) then
-            error("FORMAT TANGGAL SALAH (Harus: YYYY-MM-DD)")
-        end
-
-        local expTime = os.time({year=tonumber(yr), month=tonumber(mo), day=tonumber(dy)})
-        if os.time() >= expTime then
-            error("KEY SUDAH EXPIRED")
-        end
-
-        -- Jika semua pemeriksaan lolos, kembalikan true
-        return true
-    end)
-
-    if success and result == true then
-        Status.Text = "WORK! Akses Terbuka."
-        Status.TextColor3 = Color3.new(0, 1, 0)
-        task.wait(1)
-        KeyPanel:Destroy()
-        Main.Visible = true
-        InitializeFeatures()
-    else
-        -- Jika gagal, 'result' akan berisi pesan error dari atas
-        Status.Text = tostring(result)
-        Status.TextColor3 = Color3.new(1, 0.2, 0.2)
-        warn("Key Verification Error:", result)
-    end
-end)
+-- [[ 3. INISIALISASI ]] --
+-- Langsung jalankan fitur karena tidak ada sistem kunci
+InitializeFeatures()
+print("OMNI v143 (No-Key Edition) Berhasil Dimuat!")
