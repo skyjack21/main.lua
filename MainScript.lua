@@ -1,242 +1,226 @@
---[[
-    SKYJACK RBX v2402: ELITE-TOTAL - FINAL REVISION
-    
-    Perbaikan oleh AI Research (berdasarkan error 'attempt to call a nil value'):
-    - Memperbaiki metode pemanggilan fungsi internal untuk mencegah error 'nil value'.
-    - Menambahkan pemeriksaan keamanan untuk 'getrawmetatable' agar tidak error jika tidak didukung.
-    - UI ditempatkan di CoreGui untuk stabilitas maksimum.
-    - Seluruh skrip dibungkus pcall untuk menangkap error tersembunyi.
-    - Fitur Speed menggunakan WalkSpeed untuk gerakan mulus.
-    - Fitur Hide Name dioptimalkan dengan event-based.
-    - Fitur Noclip ditingkatkan dengan PlatformStand.
-    - Hook __namecall dibungkus newcclosure.
-]]
+-- [[ SKYJACK OMEGA v3200: HYBRID STABILITY ]] --
+-- Menggabungkan Login System v140 dengan Engine Supreme v3200
+repeat task.wait() until game:IsLoaded()
 
-local success, errorMessage = pcall(function()
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local pgui = lp:WaitForChild("PlayerGui", 15)
 
-    -- Layanan-layanan utama
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local UserInputService = game:GetService("UserInputService")
-    local CoreGui = game:GetService("CoreGui")
+-- Link Database Anda
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
-    -- Variabel pemain lokal
-    local lp = Players.LocalPlayer
+-- [[ 1. UI BUILDER (MENGGUNAKAN STRUKTUR LAMA YANG STABIL) ]] --
+local function BuildUI()
+    if pgui:FindFirstChild("SKYJACK_OMEGA_V3200") then pgui.SKYJACK_OMEGA_V3200:Destroy() end
+    local Screen = Instance.new("ScreenGui", pgui)
+    Screen.Name = "SKYJACK_OMEGA_V3200"
+    Screen.ResetOnSpawn = false
 
-    -- Tabel utama untuk mengelola semua logika skrip
-    local Skyjack = {}
-    Skyjack.Config = {
-        Speed = false,
-        WallPass = false,
-        InfJump = false,
-        Vip = false,
-        HideName = false,
-        Shield = false,
-        AutoWalk = false
-    }
-    Skyjack.UI = {}
-    Skyjack.Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield", "AutoWalk"}
-    Skyjack.Names = {"ELITE SPEED (1.95x)", "GHOST NOCLIP", "PHYSICAL INF JUMP", "SYSTEM VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK SHIELD", "STEALTH AUTO SUMMIT"}
-    Skyjack.Buttons = {}
-    Skyjack.Index = 1
+    -- PANEL LOGIN
+    local KeyPanel = Instance.new("Frame", Screen)
+    KeyPanel.Size = UDim2.new(0, 320, 0, 240) [cite: 2]
+    KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    KeyPanel.Active, KeyPanel.Draggable = true, true
+    Instance.new("UICorner", KeyPanel)
 
-    local T = Skyjack.Config -- Alias untuk akses lebih cepat
+    local KTitle = Instance.new("TextLabel", KeyPanel)
+    KTitle.Size = UDim2.new(1, 0, 0, 45)
+    KTitle.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+    KTitle.Text = "LOGIN SYSTEM (8-CHAR)"
+    KTitle.TextColor3 = Color3.new(0, 0, 0)
+    KTitle.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", KTitle)
 
-    -- [[ 1. MASTER BYPASS (METATABLE HOOK YANG DISEMPURNAKAN) ]] --
-    function Skyjack.SetupBypasses()
-        -- Pemeriksaan keamanan: hanya jalankan jika getrawmetatable ada
-        if not getrawmetatable then 
-            warn("SKYJACK: getrawmetatable tidak ditemukan. Fitur bypass tidak akan aktif.")
-            return 
+    local KeyInput = Instance.new("TextBox", KeyPanel)
+    KeyInput.Size = UDim2.new(0.85, 0, 0, 45) [cite: 3]
+    KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
+    KeyInput.PlaceholderText = "Enter Key Here..."
+    KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    KeyInput.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", KeyInput)
+
+    local CheckBtn = Instance.new("TextButton", KeyPanel)
+    CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
+    CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
+    CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+    CheckBtn.Text = "CHECK KEY"
+    CheckBtn.Font = Enum.Font.GothamBold [cite: 4]
+    Instance.new("UICorner", CheckBtn)
+
+    local Status = Instance.new("TextLabel", KeyPanel)
+    Status.Size = UDim2.new(1, 0, 0, 30)
+    Status.Position = UDim2.new(0, 0, 0.85, 0)
+    Status.BackgroundTransparency = 1
+    Status.Text = "Awaiting Key..."
+    Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+
+    -- PANEL CHEAT UTAMA (Hidden at Start)
+    local Main = Instance.new("Frame", Screen)
+    Main.Size = UDim2.new(0, 200, 0, 420)
+    Main.Position = UDim2.new(0.02, 0, 0.25, 0) [cite: 5]
+    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+    Main.Visible, Main.Active, Main.Draggable = false, true, true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", Main)
+    Stroke.Color = Color3.fromRGB(0, 255, 120)
+    Stroke.Thickness = 2
+
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.Text = "SKYJACK SUPREME v3200"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.Font = Enum.Font.GothamBold
+    Title.BackgroundTransparency = 1
+
+    return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
+end
+
+local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI() [cite: 6]
+
+-- [[ 2. MASTER FEATURES CONFIG ]] --
+getgenv().SkyjackMaster = {
+    Speed = false,      -- Supreme Speed (2.3)
+    WallPass = false,   -- Ghost Noclip
+    InfJump = false,    -- Physical Infinite Jump
+    Vip = false,        -- System VIP Bypass
+    HideName = false,   -- Identity Cleaner
+    Shield = false,     -- Anti-Kick Shield
+    AutoWalk = false    -- Stealth Auto Summit
+}
+
+local T = getgenv().SkyjackMaster
+local Keys = {"Speed", "WallPass", "InfJump", "Vip", "HideName", "Shield", "AutoWalk"}
+local Names = {"SUPREME SPEED (2.3)", "GHOST NOCLIP", "PHYSICAL INF JUMP", "SYSTEM VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK SHIELD", "STEALTH AUTO SUMMIT"}
+local Buttons = {}
+local Index = 1
+
+-- [[ 3. LOGIN LOGIC (GIST GITHUB) ]] --
+CheckBtn.MouseButton1Click:Connect(function()
+    local input = KeyInput.Text
+    if #input ~= 8 then
+        Status.Text = "KEY HARUS 8 KARAKTER!"
+        Status.TextColor3 = Color3.new(1, 0, 0)
+        return
+    end
+
+    Status.Text = "Verifying..."
+    local success, result = pcall(function() return game:HttpGet(DATABASE_URL) end)
+
+    if success then
+        local data = HttpService:JSONDecode(result) [cite: 7]
+        local keyData = data.KEY_LIST[input]
+
+        if keyData then
+            local yr, mo, dy = keyData.Exp:match("(%d+)-(%d+)-(%d+)")
+            local expTime = os.time({year=yr, month=mo, day=dy})
+            if os.time() < expTime then
+                Status.Text = "ACCESS GRANTED!" [cite: 8]
+                Status.TextColor3 = Color3.new(0, 1, 0)
+                task.wait(0.5)
+                KeyPanel:Destroy()
+                Main.Visible = true
+            else
+                Status.Text = "KEY EXPIRED!" [cite: 9]
+                Status.TextColor3 = Color3.new(1, 0.5, 0)
+            end
+        else
+            Status.Text = "INVALID KEY!"
+            Status.TextColor3 = Color3.new(1, 0, 0)
         end
+    else
+        Status.Text = "SERVER ERROR!" [cite: 10]
+    end
+end)
 
+-- [[ 4. CORE ENGINE (SPEED, NOCLIP, BYPASS) ]] --
+-- Anti-Kick & VIP Bypass
+task.spawn(function()
+    pcall(function()
         local mt = getrawmetatable(game)
-        if not mt or not mt.__namecall then return end
-        
         local oldNamecall = mt.__namecall
+        local oldIndex = mt.__index
         setreadonly(mt, false)
 
         mt.__namecall = newcclosure(function(self, ...)
             local method = getnamecallmethod()
-            
-            if T.Shield and (method == "Kick" or method == "kick") and self == lp then
-                return 
+            if T.Shield and (method == "Kick" or method == "kick") then return nil end
+            if T.Vip and (method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" or method == "CheckGamepass") then
+                return true
             end
-
-            if T.Vip then
-                if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" or method == "CheckGamepass" then
-                    return true
-                end
-            end
-
             return oldNamecall(self, ...)
         end)
-        
+
+        mt.__index = newcclosure(function(t, k)
+            if T.Vip and (k == "UserOwnsGamePassAsync" or k == "PlayerOwnsAsset") then
+                return function() return true end
+            end
+            return oldIndex(t, k)
+        end)
         setreadonly(mt, true)
-    end
-
-    -- [[ 2. LOGIKA FITUR UTAMA ]] --
-    function Skyjack.InitializeFeatures()
-        RunService.Heartbeat:Connect(function()
-            if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-            
-            local char = lp.Character
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if not hum then return end
-            local root = char.HumanoidRootPart
-
-            if T.Speed then
-                hum.WalkSpeed = 16 * 1.95
-            else
-                hum.WalkSpeed = 16
-            end
-
-            if T.AutoWalk then
-                local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit") or workspace:FindFirstChild("End")
-                if target and (target.Position - root.Position).Magnitude > 5 then
-                    hum:MoveTo(target.Position)
-                end
-            end
-
-            hum.PlatformStand = T.WallPass
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = not T.WallPass
-                end
-            end
-        end)
-
-        UserInputService.JumpRequest:Connect(function()
-            if T.InfJump and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
-                lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-
-        local function handleCharacter(character)
-            if not character or not character:FindFirstChild("Humanoid") then return end
-            
-            if T.HideName then
-                task.wait(0.5)
-                pcall(function()
-                    character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-                    if character:FindFirstChild("Head") then
-                        for _, v in pairs(character.Head:GetChildren()) do
-                            if v:IsA("BillboardGui") then
-                                v:Destroy()
-                            end
-                        end
-                    end
-                end)
-            else
-                 pcall(function()
-                    character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
-                end)
-            end
-        end
-
-        if lp.Character then handleCharacter(lp.Character) end
-        lp.CharacterAdded:Connect(handleCharacter)
-        
-        -- Tambahkan listener untuk toggle HideName agar langsung diterapkan
-        local function onToggleHideName()
-            if lp.Character then
-                handleCharacter(lp.Character)
-            end
-        end
-        -- Ini adalah bagian penting yang mungkin hilang: menghubungkan toggle ke fungsi
-        -- Kita akan memanggil ini saat tombol ditekan
-        Skyjack.OnToggleHideName = onToggleHideName
-    end
-
-    -- [[ 3. PEMBUAT UI (ABSOLUTE UI BUILDER) ]] --
-    function Skyjack.BuildUI()
-        if CoreGui:FindFirstChild("SKY_ELITE") then
-            CoreGui.SKY_ELITE:Destroy()
-        end
-
-        local Screen = Instance.new("ScreenGui", CoreGui)
-        Screen.Name = "SKY_ELITE"
-        Screen.ResetOnSpawn = false
-        Screen.ZIndexBehavior = Enum.ZIndexBehavior.Global
-
-        local Main = Instance.new("Frame", Screen)
-        Main.Size = UDim2.new(0, 185, 0, 400)
-        Main.Position = UDim2.new(0.02, 0, 0.25, 0)
-        Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
-        Main.Active = true
-        Main.Draggable = true
-        Main.ZIndex = 1000
-
-        Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-        
-        local Stroke = Instance.new("UIStroke", Main)
-        Stroke.Color = Color3.fromRGB(0, 220, 255)
-        Stroke.Thickness = 2
-
-        local Header = Instance.new("TextLabel", Main)
-        Header.Size = UDim2.new(1, 0, 0, 35)
-        Header.Text = "SKYJACK ELITE v2402"
-        Header.TextColor3 = Color3.new(1, 1, 1)
-        Header.Font = Enum.Font.GothamBold
-        Header.TextSize = 10
-        Header.BackgroundTransparency = 1
-
-        for i, name in ipairs(Skyjack.Names) do
-            local b = Instance.new("TextButton", Main)
-            b.Size = UDim2.new(1, -16, 0, 44)
-            b.Position = UDim2.new(0, 8, 0, (i * 50) - 10)
-            b.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
-            b.TextColor3 = Color3.new(1, 1, 1)
-            b.Text = name .. " [OFF]"
-            b.Font = Enum.Font.GothamBold
-            b.TextSize = 8
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-            table.insert(Skyjack.Buttons, b)
-        end
-
-        local function Refresh()
-            for i, b in ipairs(Skyjack.Buttons) do
-                local key = Skyjack.Keys[i]
-                b.Text = Skyjack.Names[i] .. (T[key] and " [ON]" or " [OFF]")
-                b.BackgroundColor3 = (i == Skyjack.Index) and Color3.fromRGB(0, 220, 255) or Color3.fromRGB(22, 22, 26)
-                b.TextColor3 = (i == Skyjack.Index) and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
-            end
-        end
-        Skyjack.UI.Refresh = Refresh
-
-        UserInputService.InputBegan:Connect(function(k, g)
-            if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
-            if g or not Main.Visible then return end
-
-            if k.KeyCode == Enum.KeyCode.Up then
-                Skyjack.Index = (Skyjack.Index > 1) and Skyjack.Index - 1 or #Skyjack.Names
-                Refresh()
-            elseif k.KeyCode == Enum.KeyCode.Down then
-                Skyjack.Index = (Skyjack.Index < #Skyjack.Names) and Skyjack.Index + 1 or 1
-                Refresh()
-            elseif k.KeyCode == Enum.KeyCode.Return then
-                local key = Skyjack.Keys[Skyjack.Index]
-                T[key] = not T[key]
-                Refresh()
-                
-                -- Jika fitur yang di-toggle adalah HideName, panggil fungsinya
-                if key == "HideName" and Skyjack.OnToggleHideName then
-                    Skyjack.OnToggleHideName()
-                end
-            end
-        end)
-
-        Refresh()
-    end
-
-    -- [[ 4. INISIALISASI SKRIP ]] --
-    Skyjack.SetupBypasses()
-    Skyjack.InitializeFeatures()
-    Skyjack.BuildUI()
-
-    print("SKYJACK RBX v2402: Berhasil dimuat dan diperbaiki.")
+    end)
 end)
 
-if not success then
-    warn("SKYJACK RBX: Gagal memuat skrip. Error:", errorMessage)
+-- Movement Engine
+rs.Heartbeat:Connect(function()
+    if not Main.Visible then return end
+    local char = lp.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid") [cite: 11]
+    if not root or not hum then return end
+
+    if T.Speed and hum.MoveDirection.Magnitude > 0 then
+        root.CFrame = root.CFrame + (hum.MoveDirection * 2.3)
+    end
+
+    if T.WallPass then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+
+    if T.AutoWalk then
+        local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit")
+        if target then hum:MoveTo(target.Position) end
+    end
+end)
+
+-- [[ 5. BUTTON GENERATOR & REFRESH ]] --
+local function Refresh() [cite: 12]
+    for i, b in ipairs(Buttons) do
+        local key = Keys[i]
+        b.Text = Names[i] .. (T[key] and " [ON]" or " [OFF]")
+        b.BackgroundColor3 = (i == Index) and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(22, 22, 28)
+        b.TextColor3 = (i == Index) and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+    end
 end
+
+for i = 1, #Names do
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(1, -16, 0, 44)
+    b.Position = UDim2.new(0, 8, 0, (i * 50) - 5)
+    b.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    b.Font = Enum.Font.GothamBold [cite: 13]
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.TextSize = 8
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    table.insert(Buttons, b)
+end
+
+uis.InputBegan:Connect(function(k, g)
+    if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
+    if g or not Main.Visible then return end
+    if k.KeyCode == Enum.KeyCode.Up then 
+        Index = (Index > 1) and Index - 1 or #Names Refresh()
+    elseif k.KeyCode == Enum.KeyCode.Down then 
+        Index = (Index < #Names) and Index + 1 or 1 Refresh()
+    elseif k.KeyCode == Enum.KeyCode.Return then 
+        T[Keys[Index]] = not T[Keys[Index]] [cite: 14]
+        Refresh()
+    end
+end)
+
+Refresh()
