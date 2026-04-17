@@ -1,8 +1,5 @@
--- [[ SKYJACK OMEGA v3605: ULTRA SPEED EDITION ]] --
--- Fix by AI Research: TargetSpeed ditingkatkan secara drastis ke 120 untuk "runner time".
--- Metode LinearVelocity dengan MaxForce.Y = 0 dipertahankan untuk stabilitas maksimal,
--- mencegah tembus objek bahkan pada kecepatan sangat tinggi.
-
+-- [[ SKYJACK OMEGA v3700: GOD-SPEED EDITION ]] --
+-- Update: Speed Boost 4.5 + Ultra Responsive Air Jump
 repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
@@ -12,48 +9,54 @@ local rs = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
 local pgui = lp:WaitForChild("PlayerGui", 15)
 
-local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/57de2421060ced152d4bbcad6a583d452dc6f9d7/gistfile1.txt"
+local DATABASE_URL = "https://gist.githubusercontent.com/skyjack21/c75760f9714ba0777e44300702dfdd82/raw/d9a4102ad46bbcf1399d208b03e57ead4bb46af8/gistfile1.txt"
 
--- [[ 1. UI BUILDER (STRUKTUR ASLI DIPERTAHANKAN) ]] --
+-- [[ 1. UI BUILDER ]] --
 local function BuildUI()
-    if pgui:FindFirstChild("SKYJACK_V3605") then pgui.SKYJACK_V3605:Destroy() end
+    if pgui:FindFirstChild("SKYJACK_V3700") then pgui.SKYJACK_V3700:Destroy() end
     local Screen = Instance.new("ScreenGui", pgui)
-    Screen.Name = "SKYJACK_V3605"
+    Screen.Name = "SKYJACK_V3700"
     Screen.ResetOnSpawn = false
+
     local KeyPanel = Instance.new("Frame", Screen)
     KeyPanel.Size = UDim2.new(0, 320, 0, 240)
     KeyPanel.Position = UDim2.new(0.5, -160, 0.4, 0)
-    KeyPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    KeyPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     KeyPanel.Active, KeyPanel.Draggable = true, true
     Instance.new("UICorner", KeyPanel)
+
     local KTitle = Instance.new("TextLabel", KeyPanel)
     KTitle.Size = UDim2.new(1, 0, 0, 45)
     KTitle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    KTitle.Text = "LOGIN SYSTEM"
+    KTitle.Text = "LOGIN GOD-SPEED"
     KTitle.TextColor3 = Color3.new(1, 1, 1)
     KTitle.Font = Enum.Font.GothamBold
     Instance.new("UICorner", KTitle)
+
     local KeyInput = Instance.new("TextBox", KeyPanel)
     KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
     KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
     KeyInput.PlaceholderText = "Enter Key..."
-    KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     KeyInput.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", KeyInput)
+
     local CheckBtn = Instance.new("TextButton", KeyPanel)
     CheckBtn.Size = UDim2.new(0.85, 0, 0, 45)
     CheckBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
     CheckBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
-    CheckBtn.Text = "VERIFY"
+    CheckBtn.Text = "ACTIVATE GOD MODE"
     CheckBtn.TextColor3 = Color3.new(1, 1, 1)
     CheckBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", CheckBtn)
+
     local Status = Instance.new("TextLabel", KeyPanel)
     Status.Size = UDim2.new(1, 0, 0, 30)
     Status.Position = UDim2.new(0, 0, 0.85, 0)
     Status.BackgroundTransparency = 1
-    Status.Text = "Awaiting Key..."
+    Status.Text = "Ready..."
     Status.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+
     local Main = Instance.new("Frame", Screen)
     Main.Name = "MainFrame"
     Main.Size = UDim2.new(0, 240, 0, 480)
@@ -62,32 +65,38 @@ local function BuildUI()
     Main.Visible, Main.Active, Main.Draggable = false, true, true
     Instance.new("UICorner", Main)
     Instance.new("UIStroke", Main).Color = Color3.fromRGB(200, 0, 0)
+
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    Title.Text = "SKYJACK REPAIR v3605"
+    Title.Text = "SKYJACK GOD-SPEED"
     Title.TextColor3 = Color3.new(1, 1, 1)
     Title.Font = Enum.Font.GothamBold
     Instance.new("UICorner", Title)
+
     return Screen, KeyPanel, Main, CheckBtn, KeyInput, Status
 end
 
 local Screen, KeyPanel, Main, CheckBtn, KeyInput, Status = BuildUI()
 
--- [[ 2. MASTER TOGGLES & CONFIG ]] --
-getgenv().Toggles = {Speed = false, AutoWalk = false, InfJump = false, Vip = false, HideName = false, Shield = false}
+-- [[ 2. MASTER TOGGLES ]] --
+getgenv().Toggles = {
+    Speed = false,
+    AutoWalk = false,
+    InfJump = false,
+    Vip = false,
+    HideName = false,
+    Shield = false
+}
+
 local T = getgenv().Toggles
 local Keys = {"Speed", "AutoWalk", "InfJump", "Vip", "HideName", "Shield"}
--- [ADJUSTED] Teks UI diubah
-local Names = {"ULTRA SPEED (120)", "AUTO SUMMIT", "PHYSICAL AIR JUMP", "VIP BYPASS", "IDENTITY CLEANER", "ANTI-KICK"}
+local Names = {"ULTRA SPEED (4.5)", "AUTO SUMMIT", "AIR JUMP", "VIP BYPASS", "GHOST MODE", "ANTI-KICK"}
 local Buttons = {}
 local Index = 1
 local IsAuthed = false
--- [CRITICAL-ADJUSTMENT] Kecepatan ditingkatkan secara drastis
-local TargetSpeed = 120 
-local velocityInstance, attachmentInstance
 
--- [[ 3. FIXED LOGIN LOGIC ]] --
+-- [[ 3. LOGIN LOGIC ]] --
 CheckBtn.MouseButton1Click:Connect(function()
     local input = KeyInput.Text
     task.spawn(function()
@@ -95,7 +104,7 @@ CheckBtn.MouseButton1Click:Connect(function()
         if success then
             local data = HttpService:JSONDecode(result)
             if data.KEY_LIST[input] then
-                Status.Text = "SUCCESS!"
+                Status.Text = "GOD SPEED ACTIVATED!"
                 IsAuthed = true
                 task.wait(0.5)
                 KeyPanel:Destroy()
@@ -104,12 +113,14 @@ CheckBtn.MouseButton1Click:Connect(function()
                 Status.Text = "INVALID KEY!"
             end
         else
-            Status.Text = "SERVER ERROR!"
+            Status.Text = "CONNECTION ERROR!"
         end
     end)
 end)
 
--- [[ 4. CORE REPAIR ENGINE ]] --
+-- [[ 4. BACKGROUND ENGINE (TETAP JALAN SAAT MENU TUTUP) ]] --
+
+-- Metatable Hooks
 task.spawn(function()
     pcall(function()
         local mt = getrawmetatable(game)
@@ -125,44 +136,53 @@ task.spawn(function()
     end)
 end)
 
+-- Heartbeat Loop (Movement)
 rs.Heartbeat:Connect(function()
     if not IsAuthed then return end
+    
     local char = lp.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     local root = char and char:FindFirstChild("HumanoidRootPart")
+    
     if not hum or not root then return end
 
-    if T.Speed and velocityInstance then
-        local currentYVelocity = root.AssemblyLinearVelocity.Y
-        local targetHorizontalVelocity = hum.MoveDirection * TargetSpeed
-        velocityInstance.VectorVelocity = Vector3.new(targetHorizontalVelocity.X, currentYVelocity, targetHorizontalVelocity.Z)
+    -- 1. ULTRA SPEED BOOST (NAIK KE 4.5)
+    if T.Speed and hum.MoveDirection.Magnitude > 0 then
+        root.CFrame = root.CFrame + (hum.MoveDirection * 4.5)
     end
 
+    -- 2. AUTO SUMMIT (SEARCH ALL FOLDERS)
     if T.AutoWalk then
-        local target = workspace:FindFirstChild("Summit", true) or workspace:FindFirstChild("Checkpoint", true) or workspace:FindFirstChild("Goal", true)
+        local target = workspace:FindFirstChild("Summit", true) or workspace:FindFirstChild("Checkpoint", true)
         if target and target:IsA("BasePart") then
             hum:MoveTo(target.Position)
         end
     end
 
+    -- 3. GHOST MODE (IDENTITY CLEANER)
     if T.HideName then
         hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
         for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") or v.Name:lower():find("tag") then
+            if v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v.Name:lower():find("name") then
                 v.Enabled = false
             end
         end
     end
 end)
 
+-- 4. ULTRA AIR JUMP
 uis.JumpRequest:Connect(function()
     if T.InfJump and IsAuthed then
         local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+        if hum then 
+            hum:ChangeState(Enum.HumanoidStateType.Jumping) 
+            task.wait()
+            hum:ChangeState(Enum.HumanoidStateType.Idle) -- Reset state biar bisa spam jump
+        end
     end
 end)
 
--- [[ 5. UI CONTROL & REFRESH ]] --
+-- [[ 5. UI CONTROL ]] --
 local function Refresh()
     for i, b in ipairs(Buttons) do
         local k = Keys[i]
@@ -187,36 +207,14 @@ uis.InputBegan:Connect(function(k, g)
     if k.KeyCode == Enum.KeyCode.L then Main.Visible = not Main.Visible end
     if g or not Main.Visible then return end
     
-    if k.KeyCode == Enum.KeyCode.Up then Index = (Index > 1) and Index - 1 or #Names
-    elseif k.KeyCode == Enum.KeyCode.Down then Index = (Index < #Names) and Index + 1 or 1
-    elseif k.KeyCode == Enum.KeyCode.Return then
-        local key = Keys[Index]
-        T[key] = not T[key]
-        
-        if key == "Speed" then
-            if T.Speed then
-                local char = lp.Character
-                if char and not velocityInstance then
-                    local root = char:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        attachmentInstance = Instance.new("Attachment", root)
-                        velocityInstance = Instance.new("LinearVelocity", attachmentInstance)
-                        velocityInstance.Attachment0 = attachmentInstance
-                        velocityInstance.MaxForce = Vector3.new(100000, 0, 100000)
-                        velocityInstance.RelativeTo = Enum.ActuatorRelativeTo.World
-                    end
-                end
-            else
-                if velocityInstance then
-                    velocityInstance:Destroy()
-                    attachmentInstance:Destroy()
-                    velocityInstance = nil
-                    attachmentInstance = nil
-                end
-            end
-        end
+    if k.KeyCode == Enum.KeyCode.Up then 
+        Index = (Index > 1) and Index - 1 or #Names Refresh()
+    elseif k.KeyCode == Enum.KeyCode.Down then 
+        Index = (Index < #Names) and Index + 1 or 1 Refresh()
+    elseif k.KeyCode == Enum.KeyCode.Return then 
+        T[Keys[Index]] = not T[Keys[Index]] 
+        Refresh()
     end
-    Refresh()
 end)
 
 Refresh()
