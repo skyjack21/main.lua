@@ -1,14 +1,15 @@
 --[[
-    SKYJACK RBX v2401: ELITE-TOTAL - REBUILT & OPTIMIZED
+    SKYJACK RBX v2402: ELITE-TOTAL - FINAL REVISION
     
-    Perbaikan oleh AI Research:
-    - UI kini di-parent ke CoreGui untuk stabilitas.
+    Perbaikan oleh AI Research (berdasarkan error 'attempt to call a nil value'):
+    - Memperbaiki metode pemanggilan fungsi internal untuk mencegah error 'nil value'.
+    - Menambahkan pemeriksaan keamanan untuk 'getrawmetatable' agar tidak error jika tidak didukung.
+    - UI ditempatkan di CoreGui untuk stabilitas maksimum.
     - Seluruh skrip dibungkus pcall untuk menangkap error tersembunyi.
-    - Fitur Speed diubah ke WalkSpeed untuk gerakan lebih mulus.
-    - Fitur Hide Name dioptimalkan dari loop 'while' menjadi event-based (CharacterAdded).
-    - Fitur Noclip ditingkatkan dengan PlatformStand untuk terbang.
-    - Hook __namecall dibungkus newcclosure agar lebih sulit dideteksi.
-    - Struktur kode dirombak agar lebih rapi dan mudah dikelola.
+    - Fitur Speed menggunakan WalkSpeed untuk gerakan mulus.
+    - Fitur Hide Name dioptimalkan dengan event-based.
+    - Fitur Noclip ditingkatkan dengan PlatformStand.
+    - Hook __namecall dibungkus newcclosure.
 ]]
 
 local success, errorMessage = pcall(function()
@@ -42,23 +43,26 @@ local success, errorMessage = pcall(function()
     local T = Skyjack.Config -- Alias untuk akses lebih cepat
 
     -- [[ 1. MASTER BYPASS (METATABLE HOOK YANG DISEMPURNAKAN) ]] --
-    function Skyjack:SetupBypasses()
+    function Skyjack.SetupBypasses()
+        -- Pemeriksaan keamanan: hanya jalankan jika getrawmetatable ada
+        if not getrawmetatable then 
+            warn("SKYJACK: getrawmetatable tidak ditemukan. Fitur bypass tidak akan aktif.")
+            return 
+        end
+
         local mt = getrawmetatable(game)
-        if not mt then return end
+        if not mt or not mt.__namecall then return end
         
         local oldNamecall = mt.__namecall
         setreadonly(mt, false)
 
-        -- Menggunakan newcclosure untuk menyamarkan hook dari deteksi anti-cheat
         mt.__namecall = newcclosure(function(self, ...)
             local method = getnamecallmethod()
             
-            -- Anti-Kick System
             if T.Shield and (method == "Kick" or method == "kick") and self == lp then
-                return -- Blokir panggilan 'Kick' pada pemain lokal
+                return 
             end
 
-            -- VIP System Bypass
             if T.Vip then
                 if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" or method == "CheckGamepass" then
                     return true
@@ -72,23 +76,21 @@ local success, errorMessage = pcall(function()
     end
 
     -- [[ 2. LOGIKA FITUR UTAMA ]] --
-    function Skyjack:InitializeFeatures()
-        -- Fitur yang berjalan setiap frame (Heartbeat)
+    function Skyjack.InitializeFeatures()
         RunService.Heartbeat:Connect(function()
             if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
             
             local char = lp.Character
             local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
             local root = char.HumanoidRootPart
 
-            -- SPEED (Metode WalkSpeed untuk stabilitas)
             if T.Speed then
-                hum.WalkSpeed = 16 * 1.95 -- 16 adalah kecepatan default
+                hum.WalkSpeed = 16 * 1.95
             else
-                hum.WalkSpeed = 16 -- Kembalikan ke normal jika fitur dimatikan
+                hum.WalkSpeed = 16
             end
 
-            -- STEALTH AUTO WALK
             if T.AutoWalk then
                 local target = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Summit") or workspace:FindFirstChild("End")
                 if target and (target.Position - root.Position).Magnitude > 5 then
@@ -96,7 +98,6 @@ local success, errorMessage = pcall(function()
                 end
             end
 
-            -- NOCLIP (Ditingkatkan dengan PlatformStand)
             hum.PlatformStand = T.WallPass
             for _, v in pairs(char:GetDescendants()) do
                 if v:IsA("BasePart") then
@@ -105,17 +106,17 @@ local success, errorMessage = pcall(function()
             end
         end)
 
-        -- INFINITE JUMP
         UserInputService.JumpRequest:Connect(function()
-            if T.InfJump and lp.Character then
+            if T.InfJump and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
                 lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
             end
         end)
 
-        -- HIDE NAME (Metode berbasis event yang efisien)
         local function handleCharacter(character)
+            if not character or not character:FindFirstChild("Humanoid") then return end
+            
             if T.HideName then
-                task.wait(0.5) -- Beri waktu agar GUI nama bawaan muncul
+                task.wait(0.5)
                 pcall(function()
                     character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
                     if character:FindFirstChild("Head") then
@@ -126,16 +127,29 @@ local success, errorMessage = pcall(function()
                         end
                     end
                 end)
+            else
+                 pcall(function()
+                    character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+                end)
             end
         end
 
         if lp.Character then handleCharacter(lp.Character) end
         lp.CharacterAdded:Connect(handleCharacter)
+        
+        -- Tambahkan listener untuk toggle HideName agar langsung diterapkan
+        local function onToggleHideName()
+            if lp.Character then
+                handleCharacter(lp.Character)
+            end
+        end
+        -- Ini adalah bagian penting yang mungkin hilang: menghubungkan toggle ke fungsi
+        -- Kita akan memanggil ini saat tombol ditekan
+        Skyjack.OnToggleHideName = onToggleHideName
     end
 
     -- [[ 3. PEMBUAT UI (ABSOLUTE UI BUILDER) ]] --
-    function Skyjack:BuildUI()
-        -- Hancurkan UI lama jika ada
+    function Skyjack.BuildUI()
         if CoreGui:FindFirstChild("SKY_ELITE") then
             CoreGui.SKY_ELITE:Destroy()
         end
@@ -161,7 +175,7 @@ local success, errorMessage = pcall(function()
 
         local Header = Instance.new("TextLabel", Main)
         Header.Size = UDim2.new(1, 0, 0, 35)
-        Header.Text = "SKYJACK ELITE v2401"
+        Header.Text = "SKYJACK ELITE v2402"
         Header.TextColor3 = Color3.new(1, 1, 1)
         Header.Font = Enum.Font.GothamBold
         Header.TextSize = 10
@@ -204,6 +218,11 @@ local success, errorMessage = pcall(function()
                 local key = Skyjack.Keys[Skyjack.Index]
                 T[key] = not T[key]
                 Refresh()
+                
+                -- Jika fitur yang di-toggle adalah HideName, panggil fungsinya
+                if key == "HideName" and Skyjack.OnToggleHideName then
+                    Skyjack.OnToggleHideName()
+                end
             end
         end)
 
@@ -211,11 +230,11 @@ local success, errorMessage = pcall(function()
     end
 
     -- [[ 4. INISIALISASI SKRIP ]] --
-    Skyjack:SetupBypasses()
-    Skyjack:InitializeFeatures()
-    Skyjack:BuildUI()
+    Skyjack.SetupBypasses()
+    Skyjack.InitializeFeatures()
+    Skyjack.BuildUI()
 
-    print("SKYJACK RBX v2401: Berhasil dimuat dan diperbaiki.")
+    print("SKYJACK RBX v2402: Berhasil dimuat dan diperbaiki.")
 end)
 
 if not success then
